@@ -16,9 +16,11 @@ create table if not exists public.reports (
   id           uuid primary key default uuid_generate_v4(),
   type         text not null check (type in ('medical','rescue','trapped','water_food','other')),
   description  text,
-  lat          double precision not null,
-  lng          double precision not null,
-  geo          geography(point, 4326),   -- generada desde lat/lng para consultas "cercanos"
+  -- lat/lng OPCIONALES: en emergencia el GPS puede fallar o no haber permiso.
+  -- Si faltan, el reportante deja una referencia escrita en 'description'.
+  lat          double precision,
+  lng          double precision,
+  geo          geography(point, 4326),   -- generada desde lat/lng (si existen)
   photo_url    text,
   contact      text,                      -- teléfono / nombre opcional
   status       text not null default 'pending'
@@ -27,11 +29,19 @@ create table if not exists public.reports (
   updated_at   timestamptz not null default now()
 );
 
--- Rellena geo automáticamente desde lat/lng
+-- Migración idempotente para BD existentes: permitir lat/lng nulos.
+alter table public.reports alter column lat drop not null;
+alter table public.reports alter column lng drop not null;
+
+-- Rellena geo automáticamente desde lat/lng (si ambos existen).
 create or replace function public.set_report_geo()
 returns trigger language plpgsql as $$
 begin
-  new.geo := ST_SetSRID(ST_MakePoint(new.lng, new.lat), 4326)::geography;
+  if new.lat is not null and new.lng is not null then
+    new.geo := ST_SetSRID(ST_MakePoint(new.lng, new.lat), 4326)::geography;
+  else
+    new.geo := null;
+  end if;
   new.updated_at := now();
   return new;
 end $$;
@@ -106,6 +116,18 @@ $$;
 
 alter table public.reports enable row level security;
 alter table public.persons enable row level security;
+
+-- Idempotente: borramos antes de crear, para poder re-ejecutar schema.sql.
+-- NOTA: security.sql REEMPLAZA estas políticas (cierra el insert anónimo y
+-- usa vistas + rol volunteer). Estas son solo la base del MVP.
+drop policy if exists "reports_select_public" on public.reports;
+drop policy if exists "reports_insert_public" on public.reports;
+drop policy if exists "reports_update_auth"  on public.reports;
+drop policy if exists "reports_delete_auth"  on public.reports;
+drop policy if exists "persons_select_public" on public.persons;
+drop policy if exists "persons_insert_public" on public.persons;
+drop policy if exists "persons_update_auth"  on public.persons;
+drop policy if exists "persons_delete_auth"  on public.persons;
 
 -- reports: lectura pública
 create policy "reports_select_public" on public.reports

@@ -31,19 +31,25 @@ $$;
 -- ------------------------------------------------------------
 
 -- ---- reports ----
-drop policy if exists "reports_select_public" on public.reports;
-drop policy if exists "reports_insert_public" on public.reports;
-drop policy if exists "reports_update_auth"  on public.reports;
-drop policy if exists "reports_delete_auth"  on public.reports;
+-- Idempotente: borramos tanto las del MVP como las que crea este archivo,
+-- para poder re-ejecutar security.sql sin errores.
+drop policy if exists "reports_select_public"    on public.reports;
+drop policy if exists "reports_insert_public"    on public.reports;
+drop policy if exists "reports_update_auth"      on public.reports;
+drop policy if exists "reports_delete_auth"      on public.reports;
+drop policy if exists "reports_select_volunteer" on public.reports;
+drop policy if exists "reports_update_volunteer" on public.reports;
+drop policy if exists "reports_delete_volunteer" on public.reports;
 
 -- El público ya NO lee la tabla cruda (usa la vista de abajo).
 -- Solo voluntarios leen la tabla completa.
 create policy "reports_select_volunteer" on public.reports
   for select using (public.is_volunteer());
 
--- Insertar público (emergencia, sin login).
-create policy "reports_insert_public" on public.reports
-  for insert with check (true);
+-- Insertar ya NO es directo del público: pasa por /api/submit (captcha +
+-- rate-limit por IP) que inserta con la secret key (salta RLS). Por eso
+-- NO creamos política de insert anónima: cerramos la puerta directa.
+-- (Si en algún momento se quiere permitir insert directo, reañadir aquí.)
 
 -- Solo voluntarios cambian estado / borran.
 create policy "reports_update_volunteer" on public.reports
@@ -52,15 +58,17 @@ create policy "reports_delete_volunteer" on public.reports
   for delete using (public.is_volunteer());
 
 -- ---- persons ----
-drop policy if exists "persons_select_public" on public.persons;
-drop policy if exists "persons_insert_public" on public.persons;
-drop policy if exists "persons_update_auth"  on public.persons;
-drop policy if exists "persons_delete_auth"  on public.persons;
+drop policy if exists "persons_select_public"    on public.persons;
+drop policy if exists "persons_insert_public"    on public.persons;
+drop policy if exists "persons_update_auth"      on public.persons;
+drop policy if exists "persons_delete_auth"      on public.persons;
+drop policy if exists "persons_select_volunteer" on public.persons;
+drop policy if exists "persons_update_volunteer" on public.persons;
+drop policy if exists "persons_delete_volunteer" on public.persons;
 
 create policy "persons_select_volunteer" on public.persons
   for select using (public.is_volunteer());
-create policy "persons_insert_public" on public.persons
-  for insert with check (true);
+-- Insert vía /api/submit (secret key), no directo. Sin política anónima.
 create policy "persons_update_volunteer" on public.persons
   for update using (public.is_volunteer());
 create policy "persons_delete_volunteer" on public.persons
@@ -163,51 +171,52 @@ end $$;
 grant execute on function public.update_person_self to anon, authenticated;
 
 -- ------------------------------------------------------------
--- 4. RATE LIMITING básico en insert anónimo (anti-spam)
---    Limita por ventana de tiempo el total de reportes anónimos.
---    Defensa simple en BD; reforzar con Edge Function + IP si escala.
+-- 4. RATE LIMITING POR IP (anti-spam)
+--    El insert anónimo ya NO va directo del navegador: pasa por el route
+--    handler /api/submit (Vercel), que verifica captcha Turnstile y llama a
+--    bump_ip_rate con la IP del cliente. Limita por IP, no global, para que
+--    un solo abusador no bloquee a todos.
+--
+--    Migración: si existían los triggers/tabla globales del MVP, se eliminan.
 -- ------------------------------------------------------------
+drop trigger if exists trg_reports_rate on public.reports;
+drop trigger if exists trg_persons_rate on public.persons;
+drop function if exists public.check_rate_limit();
+drop table if exists public.rate_buckets;
+
+-- Bucket por (ventana de minuto, IP).
 create table if not exists public.rate_buckets (
   window_start timestamptz not null,
+  ip           text not null,
   count        int not null default 0,
-  primary key (window_start)
+  primary key (window_start, ip)
 );
+-- El público NO accede a esta tabla (solo el server con secret key / RPC).
+revoke all on public.rate_buckets from anon, authenticated;
 
-create or replace function public.check_rate_limit()
-returns trigger
+-- Incrementa el contador de la IP en el minuto actual y devuelve true si
+-- sigue dentro del límite. SECURITY DEFINER: la llama el server.
+create or replace function public.bump_ip_rate(p_ip text, p_max int default 12)
+returns boolean
 language plpgsql security definer set search_path = public as $$
 declare
   v_window timestamptz := date_trunc('minute', now());
-  v_max int := 30;          -- máx inserts anónimos por minuto (ajustar)
   v_current int;
 begin
-  -- voluntarios no tienen límite
-  if public.is_volunteer() then
-    return new;
-  end if;
-
-  insert into public.rate_buckets (window_start, count)
-    values (v_window, 1)
-    on conflict (window_start)
+  insert into public.rate_buckets (window_start, ip, count)
+    values (v_window, coalesce(nullif(p_ip, ''), 'unknown'), 1)
+    on conflict (window_start, ip)
     do update set count = public.rate_buckets.count + 1
     returning count into v_current;
 
-  if v_current > v_max then
-    raise exception 'Demasiados reportes en este momento. Intenta de nuevo en un minuto.'
-      using errcode = 'check_violation';
-  end if;
-  return new;
+  -- Limpieza oportunista de ventanas viejas (más de 10 min).
+  delete from public.rate_buckets where window_start < now() - interval '10 minutes';
+
+  return v_current <= p_max;
 end $$;
 
-drop trigger if exists trg_reports_rate on public.reports;
-create trigger trg_reports_rate
-  before insert on public.reports
-  for each row execute function public.check_rate_limit();
-
-drop trigger if exists trg_persons_rate on public.persons;
-create trigger trg_persons_rate
-  before insert on public.persons
-  for each row execute function public.check_rate_limit();
+-- Solo el rol de servicio (secret key) ejecuta esto; revocamos al público.
+revoke all on function public.bump_ip_rate(text, int) from public, anon, authenticated;
 
 -- ------------------------------------------------------------
 -- Para dar de alta un voluntario (tras crear su cuenta en Auth):

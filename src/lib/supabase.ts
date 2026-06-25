@@ -17,8 +17,8 @@ export interface Report {
   id: string;
   type: ReportType;
   description: string | null;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   photo_url: string | null;
   contact: string | null;
   status: ReportStatus;

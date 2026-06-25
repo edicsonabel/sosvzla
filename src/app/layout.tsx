@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import ServiceWorker from './ServiceWorker';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://sosvzla.com'),
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body>
+        <ServiceWorker />
         <header className="topbar">
           <Link href="/" className="brand">
             <span className="dot" aria-hidden="true" />

@@ -78,7 +78,9 @@ export default function ReportsMap() {
           attribution='&copy; OpenStreetMap'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {items.map((r) => (
+        {items
+          .filter((r): r is Report & { lat: number; lng: number } => r.lat != null && r.lng != null)
+          .map((r) => (
           <Marker
             key={r.id}
             position={[r.lat, r.lng]}

@@ -176,13 +176,47 @@ Dar de alta un voluntario: tras su primer login, `insert into public.volunteers
 **Requiere habilitar Realtime** para la tabla `reports` en Supabase (Database →
 Replication) para que el panel se actualice en vivo; si no, recarga al cambiar.
 
+## Inserts anónimos (captcha + rate-limit)
+
+Los inserts del público NO van directo a Supabase. Pasan por el route handler
+`src/app/api/submit/route.ts` (Vercel, runtime nodejs), que:
+1. Verifica el token de **Cloudflare Turnstile** (captcha) en el envío en vivo.
+2. Aplica **rate-limit por IP** vía RPC `bump_ip_rate` (tabla `rate_buckets`
+   con clave `(window_start, ip)`). Un abusador no bloquea a todos.
+3. Inserta con la **secret key** (`SUPABASE_SECRET_KEY`, solo servidor), tras
+   filtrar el payload a campos permitidos (whitelist por tabla).
+
+Las políticas RLS de insert anónimo se **eliminaron** (`security.sql`): la única
+puerta es el route handler. La cola offline (`lib/offlineQueue.ts`) también
+postea a `/api/submit`; los reenvíos van con `replay:true` (sin captcha, pero
+igual pasan por el rate-limit por IP).
+
+Env nuevas (ver `.env.local.example`): `SUPABASE_SECRET_KEY`,
+`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET`. Si las de Turnstile están
+vacías, el captcha se omite (dev). Configurarlas en Vercel para producción.
+
+## Service Worker
+
+`public/sw.js` (registrado en `app/ServiceWorker.tsx`, solo en producción):
+shell network-first con fallback a `public/offline.html`, teselas del mapa
+cache-first con tope, assets stale-while-revalidate. Datos de Supabase nunca se
+cachean (los maneja la cola offline).
+
+## Ubicación opcional en SOS
+
+`lat`/`lng` son **nullables** (schema): si el GPS falla, el reportante deja una
+referencia escrita que va en `description`. El mapa filtra reportes sin coords;
+el panel de voluntarios los muestra con aviso "Sin GPS".
+
 ## Antes de producción (pendiente)
 
-- [ ] CAPTCHA / rate-limit por IP en inserts (hoy hay límite básico en BD).
+- [x] ~~CAPTCHA / rate-limit por IP en inserts.~~ Hecho (ver arriba).
+- [x] ~~Service Worker real para offline.~~ Hecho (`public/sw.js`).
 - [ ] Subida de fotos (Supabase Storage con límite de tamaño + validación).
-- [ ] Service Worker real para offline completo (hoy la cola es localStorage).
 - [ ] Ajustar el centro del mapa a la zona afectada (`ReportsMap.tsx`, const `CENTER`).
 - [ ] Borrar los datos demo de `schema.sql` en producción.
+- [ ] Crear widget Turnstile en Cloudflare y cargar las 3 env en Vercel.
+- [ ] Re-ejecutar `security.sql` en DEV y PROD (cambió rate-limit + políticas insert).
 
 ---
 

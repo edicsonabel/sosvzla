@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sin conexión · SOS Venezuela</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #07101d; color: #e8eef5; text-align: center; padding: 1.5rem;
+    }
+    .box { max-width: 28rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 .5rem; }
+    p { color: #9fb3c8; line-height: 1.5; }
+    .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+           background: #14b8a6; margin-right: .4rem; vertical-align: middle; }
+    button {
+      margin-top: 1.25rem; background: #0b3d66; color: #fff; border: 0;
+      padding: .8rem 1.4rem; border-radius: .6rem; font-size: 1rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <p><span class="dot"></span>Sin conexión</p>
+    <h1>No hay red ahora mismo</h1>
+    <p>
+      Tu reporte SOS se guarda en tu teléfono y se enviará solo cuando vuelva
+      la señal. Puedes seguir usando la app sin conexión.
+    </p>
+    <button onclick="location.reload()">Reintentar</button>
+  </div>
+</body>
+</html>

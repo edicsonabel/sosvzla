@@ -14,3 +14,6 @@ skills-lock.json
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Backups de BD (datos reales, nunca a git)
+/backups/

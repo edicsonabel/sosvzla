@@ -5,6 +5,7 @@ import { supabase, type Person } from '@/lib/supabase';
 import { submitOrQueue } from '@/lib/offlineQueue';
 import { uploadPhoto } from '@/lib/uploadPhoto';
 import { hashEditorDoc } from '@/lib/editorDoc';
+import Turnstile, { turnstileEnabled } from '@/lib/Turnstile';
 import EditPersonForm from './EditPersonForm';
 
 const BADGE: Record<string, string> = {
@@ -36,6 +37,7 @@ export default function Search() {
   const [submitted, setSubmitted] = useState<null | 'ok' | 'queued'>(null);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   async function search() {
     // Vista pública: sin contacto.
@@ -57,6 +59,12 @@ export default function Search() {
   async function report(e: React.FormEvent) {
     e.preventDefault();
     setPhotoError(null);
+
+    const online = typeof navigator === 'undefined' || navigator.onLine;
+    if (turnstileEnabled() && online && !token) {
+      setPhotoError('Completa la verificación anti-spam para enviar.');
+      return;
+    }
 
     // Sube la foto primero (requiere red). Si falla, avisa pero deja seguir.
     let photoUrl: string | null = null;
@@ -83,7 +91,12 @@ export default function Search() {
       contact: contact || null,
       photo_url: photoUrl,
       editor_doc_hash: editorHash,
-    });
+    }, token ?? undefined);
+    setToken(null);
+    if (!r.ok) {
+      setPhotoError(r.error ?? 'No se pudo enviar. Intenta de nuevo.');
+      return;
+    }
     setSubmitted(r.queued ? 'queued' : 'ok');
     if (!r.queued) {
       setName('');
@@ -166,7 +179,8 @@ export default function Search() {
               style={{ maxWidth: 140, borderRadius: 'var(--r-sm)', border: '1px solid var(--borde)' }}
             />
           )}
-          {photoError && <div className="aviso aviso-err">{photoError}</div>}
+          {photoError && <div className="aviso aviso-err" role="alert">{photoError}</div>}
+          <Turnstile onToken={setToken} />
           <button className="btn" type="submit" disabled={uploading}>
             {uploading ? 'Subiendo foto…' : 'Reportar'}
           </button>

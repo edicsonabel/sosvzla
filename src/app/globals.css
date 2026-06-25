@@ -268,7 +268,9 @@ textarea { min-height: 100px; resize: vertical; }
 .aviso { padding: 0.85rem 1rem; border-radius: var(--r-sm); font-weight: 600; font-size: 0.95rem; border: 1px solid transparent; }
 .aviso-ok   { background: color-mix(in srgb, var(--verde) 12%, var(--bg-elev)); color: var(--verde); border-color: color-mix(in srgb, var(--verde) 30%, transparent); }
 .aviso-cola { background: color-mix(in srgb, var(--ambar) 14%, var(--bg-elev)); color: var(--ambar-d); border-color: color-mix(in srgb, var(--ambar) 35%, transparent); }
-.aviso-err  { background: color-mix(in srgb, #dc2626 12%, var(--bg-elev)); color: #dc2626; border-color: color-mix(in srgb, #dc2626 30%, transparent); }
+/* Sin rojo (regla del proyecto): usamos un naranja oscuro de alerta. */
+.aviso-err  { background: color-mix(in srgb, #c2410c 14%, var(--bg-elev)); color: #c2410c; border-color: color-mix(in srgb, #c2410c 32%, transparent); }
+@media (prefers-color-scheme: dark) { .aviso-err { color: #fb923c; } }
 @media (prefers-color-scheme: dark) { .aviso-cola { color: var(--ambar); } }
 
 /* ---------- Listas / items ---------- */

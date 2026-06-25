@@ -113,15 +113,21 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
             </div>
             {r.description && <div style={{ marginTop: '0.3rem' }}>{r.description}</div>}
             <div style={{ color: 'var(--texto-sec)', fontSize: '0.85rem', marginTop: '0.4rem', fontFamily: 'var(--mono)' }}>
-              📍 {r.lat.toFixed(5)}, {r.lng.toFixed(5)}
-              {' · '}
-              <a
-                href={`https://www.openstreetmap.org/?mlat=${r.lat}&mlon=${r.lng}#map=18/${r.lat}/${r.lng}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                ver mapa
-              </a>
+              {r.lat != null && r.lng != null ? (
+                <>
+                  📍 {r.lat.toFixed(5)}, {r.lng.toFixed(5)}
+                  {' · '}
+                  <a
+                    href={`https://www.openstreetmap.org/?mlat=${r.lat}&mlon=${r.lng}#map=18/${r.lat}/${r.lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    ver mapa
+                  </a>
+                </>
+              ) : (
+                <>📍 Sin GPS — ver referencia en la descripción</>
+              )}
             </div>
             {r.contact && <div style={{ marginTop: '0.3rem' }}>📞 {r.contact}</div>}
 

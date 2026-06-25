@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { submitOrQueue } from '@/lib/offlineQueue';
 import { uploadPhoto } from '@/lib/uploadPhoto';
 import { hashEditorDoc } from '@/lib/editorDoc';
+import Turnstile, { turnstileEnabled } from '@/lib/Turnstile';
 
 export default function ImSafe() {
   const [name, setName] = useState('');
@@ -14,10 +15,17 @@ export default function ImSafe() {
   const [submitted, setSubmitted] = useState<null | 'ok' | 'queued'>(null);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setPhotoError(null);
+
+    const online = typeof navigator === 'undefined' || navigator.onLine;
+    if (turnstileEnabled() && online && !token) {
+      setPhotoError('Completa la verificación anti-spam para enviar.');
+      return;
+    }
 
     // Sube la foto primero (requiere red). Si la que eligió el usuario falla, no enviamos.
     let photoUrl: string | null = null;
@@ -44,7 +52,12 @@ export default function ImSafe() {
       photo_url: photoUrl,
       reported_by: 'la propia persona',
       editor_doc_hash: editorHash,
-    });
+    }, token ?? undefined);
+    setToken(null);
+    if (!r.ok) {
+      setPhotoError(r.error ?? 'No se pudo enviar. Intenta de nuevo.');
+      return;
+    }
     setSubmitted(r.queued ? 'queued' : 'ok');
     if (!r.queued) {
       setName('');
@@ -96,7 +109,8 @@ export default function ImSafe() {
             style={{ maxWidth: 140, borderRadius: 'var(--r-sm)', border: '1px solid var(--borde)' }}
           />
         )}
-        {photoError && <div className="aviso aviso-err">{photoError}</div>}
+        {photoError && <div className="aviso aviso-err" role="alert">{photoError}</div>}
+        <Turnstile onToken={setToken} />
         <button className="btn" type="submit" disabled={uploading}>
           {uploading ? 'Subiendo foto…' : 'Avisar que estoy bien'}
         </button>

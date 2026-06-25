@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { submitOrQueue, enableAutoSync, pendingCount } from '@/lib/offlineQueue';
+import Turnstile, { turnstileEnabled } from '@/lib/Turnstile';
 import type { ReportType } from '@/lib/supabase';
 
 const TYPES: { value: ReportType; label: string }[] = [
@@ -20,8 +21,12 @@ export default function ReportSOS() {
   const [contact, setContact] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [manual, setManual] = useState(false); // ingresar ubicación a mano
+  const [manualText, setManualText] = useState(''); // referencia escrita si no hay GPS
   const [state, setState] = useState<SubmitState>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [queued, setQueued] = useState(0);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     enableAutoSync((n) => {
@@ -39,31 +44,59 @@ export default function ReportSOS() {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setGeoError('No pudimos obtener tu ubicación. Actívala o escríbela manualmente.'),
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setManual(false);
+      },
+      () => {
+        setGeoError('No pudimos obtener tu ubicación por GPS. Puedes escribir una referencia y enviar igual.');
+        setManual(true);
+      },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!coords) {
-      setGeoError('Necesitamos tu ubicación para enviar el SOS.');
+    setErrorMsg(null);
+    // GPS es lo ideal, pero NO bloquea el SOS: en emergencia, una referencia
+    // escrita (calle, edificio) ya ayuda a los rescatistas a ubicar.
+    if (!coords && !manualText.trim()) {
+      setGeoError('Comparte tu ubicación GPS o escribe una referencia de dónde estás.');
+      return;
+    }
+    // Captcha: requerido solo en envío en vivo (con red). Sin red, va a la cola.
+    const online = typeof navigator === 'undefined' || navigator.onLine;
+    if (turnstileEnabled() && online && !token) {
+      setState('error');
+      setErrorMsg('Completa la verificación anti-spam para enviar.');
       return;
     }
     setState('submitting');
+    // Si no hay GPS, mandamos la referencia escrita dentro de la descripción
+    // y coordenadas nulas; el panel de voluntarios la lee.
+    const fullDescription = [description, manualText.trim() ? `📍 Referencia: ${manualText.trim()}` : '']
+      .filter(Boolean)
+      .join('\n') || null;
     const r = await submitOrQueue('reports', {
       type,
-      description: description || null,
+      description: fullDescription,
       contact: contact || null,
-      lat: coords.lat,
-      lng: coords.lng,
-    });
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
+    }, token ?? undefined);
     setQueued(pendingCount());
+    setToken(null); // el token Turnstile es de un solo uso
+    if (!r.ok) {
+      setState('error');
+      setErrorMsg(r.error ?? 'No se pudo enviar. Intenta de nuevo.');
+      return;
+    }
     setState(r.queued ? 'queued' : 'ok');
     if (!r.queued) {
       setDescription('');
       setContact('');
+      setManualText('');
     }
   }
 
@@ -112,23 +145,41 @@ export default function ReportSOS() {
           {coords ? (
             <p>Lat {coords.lat.toFixed(5)}, Lng {coords.lng.toFixed(5)}</p>
           ) : (
-            <p>{geoError ?? 'Obteniendo ubicación…'}</p>
+            <p aria-live="polite">{geoError ?? 'Obteniendo ubicación…'}</p>
           )}
           <button type="button" className="btn btn-sec" onClick={locate}>
-            Volver a ubicarme
+            Usar mi ubicación GPS
           </button>
+
+          {(manual || (!coords && geoError)) && (
+            <label style={{ marginTop: '.75rem' }}>
+              ¿Dónde estás? (referencia escrita)
+              <input
+                value={manualText}
+                onChange={(e) => setManualText(e.target.value)}
+                placeholder="Ej: Av. Bolívar, edificio azul frente a la plaza, piso 3."
+              />
+            </label>
+          )}
         </div>
+
+        <Turnstile onToken={setToken} />
 
         <button className="btn" type="submit" disabled={state === 'submitting'}>
           {state === 'submitting' ? 'Enviando…' : 'Enviar SOS'}
         </button>
 
         {state === 'ok' && (
-          <div className="aviso aviso-ok">✅ SOS enviado. Mantente a salvo, vienen en camino.</div>
+          <div className="aviso aviso-ok" role="status" aria-live="polite">✅ SOS enviado. Mantente a salvo, vienen en camino.</div>
         )}
         {state === 'queued' && (
-          <div className="aviso aviso-cola">
+          <div className="aviso aviso-cola" role="status" aria-live="polite">
             ⏳ Sin conexión: tu SOS quedó guardado y se enviará automáticamente.
+          </div>
+        )}
+        {state === 'error' && (
+          <div className="aviso aviso-err" role="alert" aria-live="assertive">
+            ⚠️ {errorMsg}
           </div>
         )}
       </form>
