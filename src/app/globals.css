@@ -86,7 +86,16 @@
 
 * { box-sizing: border-box; }
 
+/* Sin scroll horizontal: red de seguridad global. */
+html, body { overflow-x: hidden; }
+
 html { -webkit-text-size-adjust: 100%; }
+
+/* Los hijos de un grid tienen min-width:auto por defecto; un control con ancho
+   intrínseco grande (ej. input[type=file]) desbordaba el formulario. min-width:0
+   permite que se encojan; max-width:100% evita que cualquier control rebase. */
+form > *, label > * { min-width: 0; }
+input, select, textarea { min-width: 0; max-width: 100%; }
 
 body {
   margin: 0;
@@ -176,18 +185,46 @@ body::before {
 }
 .nav-controls { display: inline-flex; align-items: center; gap: 0.35rem; }
 
-/* Mobile + tablet: rejilla de botones grandes, dos por fila, para que no se
-   amontonen y sean fáciles de tocar/leer. Los controles (tema/idioma/github)
-   quedan en su propia fila al final. */
+/* Botón hamburguesa: oculto en desktop, visible en móvil/tablet (ver media). */
+.nav-burger {
+  display: none;
+  width: 44px; height: 44px;
+  align-items: center; justify-content: center;
+  border: 1px solid var(--borde);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  color: var(--texto);
+  cursor: pointer;
+  box-shadow: var(--sombra);
+  transition: border-color .15s, background .15s;
+}
+.nav-burger:hover { border-color: var(--acento); }
+.nav-burger:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--anillo); }
+.nav-burger-bars { display: grid; gap: 4px; width: 20px; }
+.nav-burger-bars span {
+  height: 2px; width: 100%; border-radius: 2px;
+  background: currentColor;
+  transition: transform .2s ease, opacity .15s ease;
+}
+/* Animación a "X" cuando está abierto (aria-expanded en el botón). */
+.nav-burger[aria-expanded="true"] .nav-burger-bars span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-burger[aria-expanded="true"] .nav-burger-bars span:nth-child(2) { opacity: 0; }
+.nav-burger[aria-expanded="true"] .nav-burger-bars span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Mobile + tablet: el nav se colapsa tras el botón hamburguesa. Al abrir,
+   rejilla de botones grandes, dos por fila, fáciles de tocar/leer. Los
+   controles (tema/idioma/github) quedan en su propia fila al final. */
 @media (max-width: 860px) {
   .topbar { gap: 0.6rem 0.75rem; }
-  .topbar nav {
+  .nav-burger { display: inline-flex; }
+  .topbar nav { display: none; }
+  .topbar nav.is-open {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
   }
-  .topbar nav > a {
+  .topbar nav.is-open > a {
     font-size: 1.05rem;
     min-height: 52px;
     padding: 0.7rem 0.9rem;
@@ -195,14 +232,18 @@ body::before {
     border-color: var(--borde);
     box-shadow: var(--sombra);
   }
-  .topbar nav > a .nav-icon { font-size: 1.4rem; }
+  .topbar nav.is-open > a .nav-icon { font-size: 1.4rem; }
   /* Controles (tema/idioma/github) en su propia fila completa, centrados. */
-  .nav-controls {
+  .topbar nav.is-open .nav-controls {
     grid-column: span 2;
     justify-content: center;
     gap: 0.6rem;
     margin-top: 0.15rem;
   }
+}
+
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  .nav-burger-bars span { transition: none; }
 }
 
 /* ---------- Layout ---------- */

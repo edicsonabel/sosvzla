@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useT, LangToggle } from '@/lib/i18n';
 import { ThemeToggle } from '@/lib/theme';
 
@@ -20,6 +21,12 @@ function GithubIcon() {
 export function Nav() {
   const { t } = useT();
   const pathname = usePathname();
+  // Menú hamburguesa en móvil/tablet: la rejilla de botones ocupaba demasiada
+  // pantalla. Colapsado por defecto; se abre con el botón. En desktop el CSS
+  // ignora el estado y muestra todo en línea.
+  const [open, setOpen] = useState(false);
+  // Cierra al cambiar de ruta (navegación desde el propio menú).
+  useEffect(() => { setOpen(false); }, [pathname]);
   // [ruta, label, icono]. El icono es decorativo (aria-hidden); el label da
   // el nombre accesible. Iconos consistentes con las tarjetas de la home.
   const links: [string, string, string][] = [
@@ -36,7 +43,19 @@ export function Nav() {
         <span className="dot" aria-hidden="true" />
         SOS&nbsp;Venezuela
       </Link>
-      <nav>
+      <button
+        type="button"
+        className="nav-burger"
+        aria-expanded={open}
+        aria-controls="nav-menu"
+        aria-label={t('nav.menu')}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="nav-burger-bars" aria-hidden="true">
+          <span /><span /><span />
+        </span>
+      </button>
+      <nav id="nav-menu" className={open ? 'is-open' : undefined}>
         {links.map(([href, label, icon]) => (
           <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}>
             <span className="nav-icon" aria-hidden="true">{icon}</span>
