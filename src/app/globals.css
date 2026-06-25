@@ -95,9 +95,11 @@ body {
   color: var(--texto);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  /* Atmósfera: halo radial sutil tras el header + grano */
+  /* Atmósfera: halos radiales sutiles (teal arriba, azul abajo-izq) + grano.
+     Da profundidad sin distraer; apropiado para uso bajo estrés. */
   background-image:
-    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--acento) 10%, transparent), transparent 60%);
+    radial-gradient(110% 50% at 50% -8%, color-mix(in srgb, var(--acento) 11%, transparent), transparent 58%),
+    radial-gradient(70% 50% at 8% 105%, color-mix(in srgb, var(--primario) 8%, transparent), transparent 60%);
   background-attachment: fixed;
 }
 
@@ -159,6 +161,7 @@ body::before {
   transition: color .15s, background .15s;
 }
 .topbar nav a:hover { color: var(--texto); background: var(--borde); }
+.topbar nav a[aria-current="page"] { color: var(--texto); background: var(--acento-soft); }
 
 /* ---------- Layout ---------- */
 .container { max-width: 920px; margin: 0 auto; padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem) 4rem; }
@@ -195,6 +198,20 @@ a { color: var(--acento); }
   margin-bottom: 0.9rem;
 }
 
+/* ---------- Hero (home) ---------- */
+.hero {
+  position: relative;
+  padding: clamp(.5rem, 2vw, 1.5rem) 0 .5rem;
+}
+.hero h1 {
+  /* Acento de marca en la última línea del título vía degradado de texto */
+  background: linear-gradient(180deg, var(--texto), color-mix(in srgb, var(--texto) 78%, var(--primario)));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.hero .lead { max-width: 52ch; }
+.hero-cta { margin-top: 1.5rem; max-width: 560px; }
+
 /* ---------- Botones ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
@@ -221,25 +238,49 @@ a { color: var(--acento); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-sec { color: var(--texto); } }
 .btn-sec:hover { background: var(--borde); }
 
-/* Botón SOS gigante (acción primaria home) */
+/* Botón SOS gigante (acción primaria home). Dos líneas: acción + aclaración.
+   Halo teal en la esquina + anillo que late con calma para llamar la vista
+   sin agitar (uso bajo estrés). */
 .btn-sos {
   width: 100%;
-  font-size: 1.35rem;
-  padding: 1.3rem;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1.25rem 1.4rem;
   border-radius: var(--r);
   background: linear-gradient(135deg, var(--azul-800), var(--azul-600));
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 .btn-sos::after {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--teal-400) 35%, transparent), transparent 50%);
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--teal-400) 38%, transparent), transparent 52%);
   opacity: .5;
 }
-.btn-sos:hover { background: linear-gradient(135deg, var(--azul-900), var(--azul-700)); }
+.btn-sos-label {
+  font-family: var(--display); font-weight: 800;
+  font-size: 1.4rem; letter-spacing: -0.02em; line-height: 1;
+}
+.btn-sos-sub {
+  font-family: var(--mono); font-weight: 500;
+  font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase;
+  color: color-mix(in srgb, #fff 78%, transparent);
+}
+.btn-sos::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 var(--acento);
+  animation: sosAnillo 2.6s ease-out infinite;
+}
+@keyframes sosAnillo {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acento) 55%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 14px transparent; }
+}
+.btn-sos:hover { background: linear-gradient(135deg, var(--azul-900), var(--azul-700)); transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .btn-sos::before { animation: none; } }
 
 /* ---------- Tarjetas acción ---------- */
-.grid-acciones { display: grid; gap: 0.85rem; grid-template-columns: 1fr 1fr; margin-top: 1.5rem; }
+.grid-acciones { display: grid; gap: 0.85rem; grid-template-columns: 1fr 1fr; margin-top: 1.75rem; }
 .card {
   background: var(--bg-elev);
   border: 1px solid var(--borde);
@@ -250,17 +291,31 @@ a { color: var(--acento); }
   box-shadow: var(--sombra);
   position: relative;
   overflow: hidden;
-  transition: transform .15s ease, border-color .15s;
+  transition: transform .18s ease, border-color .18s, box-shadow .18s;
 }
 .card::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
   background: var(--acento); transform: scaleY(0); transform-origin: top;
   transition: transform .2s ease;
 }
-.card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--acento) 50%, var(--borde)); }
+.card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--acento) 50%, var(--borde));
+  box-shadow: 0 1px 2px rgba(6,36,63,.06), 0 14px 32px -12px rgba(6,36,63,.28);
+}
 .card:hover::before { transform: scaleY(1); }
-.card .emoji { font-size: 1.9rem; line-height: 1; }
-.card h3 { margin: 0.6rem 0 0.25rem; font-size: 1.15rem; }
+/* Icono dentro de un tile (no emoji suelto): da peso y consistencia */
+.card-icon {
+  display: grid; place-items: center;
+  width: 2.6rem; height: 2.6rem;
+  font-size: 1.4rem; line-height: 1;
+  border-radius: var(--r-sm);
+  background: var(--acento-soft);
+  border: 1px solid color-mix(in srgb, var(--acento) 22%, transparent);
+  transition: transform .18s ease;
+}
+.card:hover .card-icon { transform: scale(1.06) rotate(-3deg); }
+.card h3 { margin: 0.85rem 0 0.25rem; font-size: 1.15rem; }
 .card p { margin: 0; color: var(--texto-sec); font-size: 0.9rem; }
 
 /* ---------- Formularios ---------- */
@@ -274,6 +329,9 @@ input, select, textarea {
   background: var(--bg-elev);
   color: var(--texto);
   transition: border-color .15s, box-shadow .15s;
+}
+input:hover, select:hover, textarea:hover {
+  border-color: color-mix(in srgb, var(--acento) 40%, var(--borde));
 }
 input:focus, select:focus, textarea:focus {
   outline: none;
@@ -317,6 +375,210 @@ textarea { min-height: 100px; resize: vertical; }
   :root:not([data-theme="light"]) .badge-found_pending { color: var(--ambar); }
 }
 
+/* ---------- Personas (cartel "SE BUSCA") ----------
+   La foto domina: la cara es lo que permite reconocer a un familiar.
+   Grid de carteles; cada uno con foto grande, badge encima y datos debajo. */
+.personas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.persona-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+  border: 1px solid var(--borde);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+  transition: transform .18s ease, border-color .18s, box-shadow .18s;
+}
+.persona-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--acento) 45%, var(--borde));
+  box-shadow: 0 1px 2px rgba(6,36,63,.06), 0 16px 34px -14px rgba(6,36,63,.32);
+}
+/* Mientras se edita, ocupa todo el ancho y no flota */
+.persona-card.is-editing { grid-column: 1 / -1; transform: none; }
+
+.persona-foto {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--borde);
+}
+.persona-foto img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+/* Sin foto: inicial grande, deja claro que falta sin dejar hueco muerto */
+.persona-foto-vacia {
+  width: 100%; height: 100%;
+  display: grid; place-content: center; gap: .15rem;
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, var(--acento) 22%, var(--bg-elev)), var(--bg-elev));
+  color: var(--texto-sec);
+}
+.persona-inicial {
+  font-family: var(--display); font-weight: 900;
+  font-size: clamp(2.6rem, 8vw, 3.4rem); line-height: 1;
+  color: color-mix(in srgb, var(--acento) 75%, var(--texto));
+  text-align: center;
+}
+.persona-sinfoto {
+  font-family: var(--mono); font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em; text-align: center;
+}
+/* Badge de estado flotando sobre la foto, legible sobre cualquier imagen */
+.persona-badge {
+  position: absolute; top: .6rem; right: .6rem;
+  backdrop-filter: blur(6px) saturate(140%);
+  background: color-mix(in srgb, var(--bg-elev) 78%, transparent);
+  border: 1px solid var(--borde);
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+
+.persona-datos {
+  display: flex; flex-direction: column;
+  padding: .85rem .95rem 1rem;
+  gap: .15rem;
+}
+.persona-nombre {
+  font-family: var(--display); font-weight: 800;
+  font-size: 1.1rem; letter-spacing: -.01em; line-height: 1.2;
+  margin-bottom: .15rem;
+}
+.persona-meta { color: var(--texto-sec); font-size: .9rem; }
+.persona-desc { color: var(--texto-sec); font-size: .88rem; margin-top: .25rem; }
+.persona-card .is-editing, .persona-card form { width: 100%; }
+
+@media (max-width: 420px) {
+  .personas-grid { grid-template-columns: 1fr; }
+}
+
+/* Foto y nombre como disparadores del detalle (botones sin estilo nativo) */
+.persona-foto-btn {
+  border: 0; padding: 0; margin: 0; cursor: pointer;
+  font: inherit; color: inherit; text-align: left;
+  display: block;
+}
+.persona-foto-btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: color-mix(in srgb, var(--azul-900) 22%, transparent);
+  opacity: 0; transition: opacity .18s;
+}
+.persona-card:hover .persona-foto-btn::after { opacity: 1; }
+.persona-nombre-btn {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  text-align: left; color: var(--texto);
+}
+.persona-nombre-btn:hover { color: var(--acento); }
+.persona-nombre-btn:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- Modal de detalle de persona ---------- */
+.pmodal {
+  background: var(--bg-elev);
+  border: 1px solid var(--borde);
+  border-radius: var(--r);
+  width: 100%; max-width: 30rem;
+  max-height: 92vh; overflow-y: auto;
+  position: relative;
+  box-shadow: 0 18px 60px -12px rgba(0,0,0,.5);
+  animation: modalFade .18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) { .pmodal { animation: none; } }
+.pmodal-close {
+  position: absolute; top: .7rem; right: .7rem; z-index: 2;
+  width: 2rem; height: 2rem; border-radius: 50%;
+  border: 1px solid var(--borde);
+  background: color-mix(in srgb, var(--bg-elev) 80%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--texto); cursor: pointer; font-size: .9rem;
+  display: grid; place-items: center;
+  transition: background .15s, border-color .15s;
+}
+.pmodal-close:hover { background: var(--borde); border-color: var(--acento); }
+
+.pmodal-foto {
+  position: relative;
+  width: 100%; aspect-ratio: 4 / 3;
+  background: var(--borde);
+  border-radius: var(--r) var(--r) 0 0; overflow: hidden;
+}
+.pmodal-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pmodal-foto-vacia {
+  width: 100%; height: 100%;
+  display: grid; place-content: center; gap: .2rem;
+  background: radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, var(--acento) 22%, var(--bg-elev)), var(--bg-elev));
+  color: var(--texto-sec);
+}
+.pmodal-foto .persona-inicial { font-size: clamp(3rem, 14vw, 4.5rem); }
+.pmodal-foto .persona-badge { top: .75rem; right: .75rem; }
+
+.pmodal-body { padding: 1.1rem 1.25rem 1.35rem; }
+.pmodal-nombre {
+  font-family: var(--display); font-weight: 800;
+  font-size: 1.5rem; letter-spacing: -.02em; line-height: 1.1;
+  margin: 0 0 .15rem;
+}
+.pmodal-doc { color: var(--texto-sec); font-family: var(--mono); font-size: .85rem; margin-bottom: .9rem; }
+
+.pmodal-datos {
+  display: grid; grid-template-columns: 1fr 1fr; gap: .6rem;
+  margin-bottom: .9rem;
+}
+.pmodal-dato {
+  display: flex; flex-direction: column; gap: .15rem;
+  background: var(--bg); border: 1px solid var(--borde);
+  border-radius: var(--r-sm); padding: .6rem .7rem;
+}
+.pmodal-dato-k {
+  font-family: var(--mono); font-size: .64rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--texto-sec);
+}
+.pmodal-dato-v { font-weight: 600; font-size: .92rem; }
+.pmodal-desc { color: var(--texto-sec); font-size: .92rem; margin: 0 0 1rem; }
+
+/* Caja de acción "¿La reconoces?" */
+.pmodal-accion {
+  background: color-mix(in srgb, var(--acento) 9%, var(--bg-elev));
+  border: 1px solid color-mix(in srgb, var(--acento) 28%, transparent);
+  border-radius: var(--r-sm);
+  padding: .9rem 1rem; margin-bottom: 1rem;
+  display: grid; gap: .5rem;
+}
+.pmodal-accion strong { font-family: var(--display); font-size: 1rem; }
+.pmodal-accion p { margin: 0; font-size: .86rem; color: var(--texto-sec); }
+.pmodal-accion input { margin: 0; }
+.pmodal-accion .btn { width: 100%; }
+
+/* Difusión */
+.pmodal-share { margin-bottom: 1rem; }
+.pmodal-share-label {
+  display: block; font-family: var(--mono); font-size: .66rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em; color: var(--texto-sec);
+  margin-bottom: .5rem;
+}
+.pmodal-share-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+.pmodal-share-btns .chip { text-decoration: none; }
+
+.pmodal-foot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem .9rem;
+  padding-top: .9rem; border-top: 1px solid var(--borde);
+}
+.pmodal-report {
+  font-size: .8rem; color: var(--texto-sec); text-decoration: none;
+  margin-left: auto;
+}
+.pmodal-report:hover { color: var(--ambar-d); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pmodal-report:hover { color: var(--ambar); } }
+:root[data-theme="dark"] .pmodal-report:hover { color: var(--ambar); }
+
+@media (max-width: 380px) {
+  .pmodal-datos { grid-template-columns: 1fr; }
+}
+
 /* ---------- Mapa ---------- */
 .mapa-wrap {
   height: 70vh; min-height: 440px;
@@ -331,9 +593,17 @@ textarea { min-height: 100px; resize: vertical; }
 .filtros-mapa .chip { font-size: 0.85rem; padding: 0.35rem 0.7rem; }
 
 /* Tarjeta de llamada (directorio de emergencia) */
-.call-card { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; }
-.call-card:hover { border-color: var(--acento); transform: translateY(-1px); }
-.call-num { font-family: var(--mono); font-weight: 700; color: var(--primario); white-space: nowrap; }
+.call-card { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.call-card:hover { border-color: var(--acento); transform: translateY(-1px); box-shadow: 0 1px 2px rgba(6,36,63,.06), 0 12px 28px -12px rgba(6,36,63,.26); }
+/* El número como tile marcable, prominente */
+.call-num {
+  font-family: var(--mono); font-weight: 700; color: var(--primario);
+  white-space: nowrap; font-size: 0.92rem;
+  padding: 0.45rem 0.7rem; border-radius: var(--r-sm);
+  background: var(--acento-soft);
+  border: 1px solid color-mix(in srgb, var(--acento) 20%, transparent);
+}
+.call-card:hover .call-num { color: var(--primario-h); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .call-num { color: var(--acento); } }
 
 /* Compartir SOS */

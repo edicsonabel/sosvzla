@@ -1,12 +1,22 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useT, LangToggle } from '@/lib/i18n';
 import { ThemeToggle } from '@/lib/theme';
 
 // Barra de navegación traducible + toggle de idioma. Cliente porque usa useT.
 export function Nav() {
   const { t } = useT();
+  const pathname = usePathname();
+  const links: [string, string][] = [
+    ['/sos', t('nav.report')],
+    ['/mapa', t('nav.map')],
+    ['/buscar', t('nav.search')],
+    ['/estoy-bien', t('nav.safe')],
+    ['/emergencias', t('nav.phones')],
+    ['/voluntarios', t('nav.volunteers')],
+  ];
   return (
     <header className="topbar">
       <Link href="/" className="brand">
@@ -14,12 +24,11 @@ export function Nav() {
         SOS&nbsp;Venezuela
       </Link>
       <nav>
-        <Link href="/sos">{t('nav.report')}</Link>
-        <Link href="/mapa">{t('nav.map')}</Link>
-        <Link href="/buscar">{t('nav.search')}</Link>
-        <Link href="/estoy-bien">{t('nav.safe')}</Link>
-        <Link href="/emergencias">{t('nav.phones')}</Link>
-        <Link href="/voluntarios">{t('nav.volunteers')}</Link>
+        {links.map(([href, label]) => (
+          <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}>
+            {label}
+          </Link>
+        ))}
         <ThemeToggle />
         <LangToggle />
       </nav>

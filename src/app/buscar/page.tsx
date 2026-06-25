@@ -7,6 +7,7 @@ import { uploadPhoto } from '@/lib/uploadPhoto';
 import { hashEditorDoc } from '@/lib/editorDoc';
 import Turnstile, { turnstileEnabled } from '@/lib/Turnstile';
 import EditPersonForm from './EditPersonForm';
+import PersonModal from './PersonModal';
 import { useT } from '@/lib/i18n';
 
 const BADGE: Record<string, string> = {
@@ -22,6 +23,9 @@ export default function Search() {
   const [results, setResults] = useState<Person[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null); // persona en modal
+  // Fotos cuya URL existe pero falla la carga (404/CORS): caen al placeholder.
+  const [photoFail, setPhotoFail] = useState<Record<string, boolean>>({});
 
   // formulario reportar desaparecido
   const [name, setName] = useState('');
@@ -188,50 +192,90 @@ export default function Search() {
         </form>
       )}
 
-      <div className="lista">
-        {results.length === 0 && <p>{t('search.noResults')}</p>}
+      {results.length === 0 && <p style={{ marginTop: '1.25rem' }}>{t('search.noResults')}</p>}
+
+      <div className="personas-grid">
         {results.map((p) => (
-          <div className="item" key={p.id}>
-            <div style={{ display: 'flex', gap: '0.85rem' }}>
-              {p.photo_url && (
+          <div className={`persona-card${editingId === p.id ? ' is-editing' : ''}`} key={p.id}>
+            {/* Foto protagonista: la cara es lo que permite reconocer al familiar.
+                Sin foto → inicial grande, nunca caja vacía. Click → detalle. */}
+            <button
+              type="button"
+              className="persona-foto persona-foto-btn"
+              onClick={() => setDetailId(p.id)}
+              aria-label={p.name}
+            >
+              {p.photo_url && !photoFail[p.id] ? (
                 <img
                   src={p.photo_url}
                   alt={p.name}
-                  style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--r-sm)', flexShrink: 0, border: '1px solid var(--borde)' }}
+                  loading="lazy"
+                  onError={() => setPhotoFail((f) => ({ ...f, [p.id]: true }))}
+                  onLoad={(e) => {
+                    // Imagen degenerada (1×1, pixel vacío de datos de prueba o
+                    // subida corrupta): trátala como ausente y cae al placeholder.
+                    const img = e.currentTarget;
+                    if (img.naturalWidth <= 2 || img.naturalHeight <= 2) {
+                      setPhotoFail((f) => ({ ...f, [p.id]: true }));
+                    }
+                  }}
+                />
+              ) : (
+                <div className="persona-foto-vacia" aria-hidden="true">
+                  <span className="persona-inicial">{(p.name?.trim()?.[0] ?? '?').toUpperCase()}</span>
+                  <span className="persona-sinfoto">{t('search.noPhoto')}</span>
+                </div>
+              )}
+              <span className={`badge ${BADGE[p.status]} persona-badge`}>
+                {t(`person.status.${p.status}`)}
+              </span>
+            </button>
+
+            <div className="persona-datos">
+              <button type="button" className="persona-nombre persona-nombre-btn" onClick={() => setDetailId(p.id)}>
+                {p.name}
+              </button>
+              {p.document_id && <div className="persona-meta">🪪 {p.document_id}</div>}
+              {p.last_seen && <div className="persona-meta">📍 {p.last_seen}</div>}
+              {p.description && <div className="persona-desc">{p.description}</div>}
+              {editingId !== p.id && (
+                <button
+                  className="btn btn-sec"
+                  style={{ marginTop: '0.6rem', alignSelf: 'flex-start' }}
+                  onClick={() => setEditingId(p.id)}
+                >
+                  {t('search.edit')}
+                </button>
+              )}
+              {editingId === p.id && (
+                <EditPersonForm
+                  person={p}
+                  onCancel={() => setEditingId(null)}
+                  onSaved={(updated) => {
+                    setResults((rs) => rs.map((x) => (x.id === updated.id ? updated : x)));
+                    setEditingId(null);
+                  }}
                 />
               )}
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-                  <strong>{p.name}</strong>
-                  <span className={`badge ${BADGE[p.status]}`}>{t(`person.status.${p.status}`)}</span>
-                </div>
-                {p.document_id && <div style={{ color: 'var(--texto-sec)' }}>🪪 {p.document_id}</div>}
-                {p.last_seen && <div>📍 {p.last_seen}</div>}
-                {p.description && <div style={{ color: 'var(--texto-sec)' }}>{p.description}</div>}
-                {editingId !== p.id && (
-                  <button
-                    className="btn btn-sec"
-                    style={{ marginTop: '0.5rem' }}
-                    onClick={() => setEditingId(p.id)}
-                  >
-                    {t('search.edit')}
-                  </button>
-                )}
-              </div>
             </div>
-            {editingId === p.id && (
-              <EditPersonForm
-                person={p}
-                onCancel={() => setEditingId(null)}
-                onSaved={(updated) => {
-                  setResults((rs) => rs.map((x) => (x.id === updated.id ? updated : x)));
-                  setEditingId(null);
-                }}
-              />
-            )}
           </div>
         ))}
       </div>
+
+      {detailId && (() => {
+        const p = results.find((x) => x.id === detailId);
+        if (!p) return null;
+        return (
+          <PersonModal
+            person={p}
+            onClose={() => setDetailId(null)}
+            onEdit={() => { setDetailId(null); setEditingId(p.id); }}
+            onUpdated={(updated) => {
+              setResults((rs) => rs.map((x) => (x.id === updated.id ? updated : x)));
+            }}
+          />
+        );
+      })()}
     </>
   );
 }
