@@ -36,7 +36,19 @@ export function Nav() {
   );
 }
 
+const REPO_URL = 'https://github.com/edicsonabel/sosvzla';
+
 export function Footer() {
   const { t } = useT();
-  return <footer className="footer">{t('footer.tagline')}</footer>;
+  return (
+    <footer className="footer">
+      <span>{t('footer.tagline')}</span>
+      <span className="footer-contribute">
+        {t('footer.openSource')}{' '}
+        <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+          {t('footer.contribute')} ↗
+        </a>
+      </span>
+    </footer>
+  );
 }
