@@ -409,6 +409,7 @@ textarea { min-height: 100px; resize: vertical; }
   background: var(--borde);
 }
 .persona-foto img {
+  position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover; display: block;
 }
@@ -506,7 +507,7 @@ textarea { min-height: 100px; resize: vertical; }
   background: var(--borde);
   border-radius: var(--r) var(--r) 0 0; overflow: hidden;
 }
-.pmodal-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pmodal-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pmodal-foto-vacia {
   width: 100%; height: 100%;
   display: grid; place-content: center; gap: .2rem;
@@ -578,6 +579,44 @@ textarea { min-height: 100px; resize: vertical; }
 @media (max-width: 380px) {
   .pmodal-datos { grid-template-columns: 1fr; }
 }
+
+/* ---------- Página pública de persona /p/[id] ---------- */
+.pp { max-width: 540px; margin: 0 auto; }
+.pp-back {
+  display: inline-block; margin-bottom: 1rem;
+  color: var(--texto-sec); text-decoration: none; font-weight: 600; font-size: .9rem;
+}
+.pp-back:hover { color: var(--acento); }
+.pp-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--borde);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+.pp-foto {
+  position: relative; width: 100%; aspect-ratio: 4 / 3;
+  background: var(--borde);
+}
+.pp-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pp-foto-vacia {
+  width: 100%; height: 100%;
+  display: grid; place-content: center; gap: .2rem;
+  background: radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, var(--acento) 22%, var(--bg-elev)), var(--bg-elev));
+  color: var(--texto-sec);
+}
+.pp-foto .persona-inicial { font-size: clamp(3rem, 14vw, 4.5rem); }
+.pp-foto .persona-badge { top: .75rem; right: .75rem; }
+.pp-body { padding: 1.25rem 1.4rem 1.5rem; }
+.pp-nombre {
+  font-family: var(--display); font-weight: 800;
+  font-size: clamp(1.6rem, 6vw, 2rem); letter-spacing: -.02em; line-height: 1.1;
+  margin: 0 0 .15rem;
+}
+.pp-doc { color: var(--texto-sec); font-family: var(--mono); font-size: .88rem; margin-bottom: 1rem; }
+.pp-datos { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: 1rem; }
+.pp-desc { color: var(--texto-sec); margin: 0 0 1.25rem; }
+@media (max-width: 380px) { .pp-datos { grid-template-columns: 1fr; } }
 
 /* ---------- Mapa ---------- */
 .mapa-wrap {

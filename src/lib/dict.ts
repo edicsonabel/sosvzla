@@ -153,6 +153,10 @@ export const dict = {
     'pmodal.edit': '✏️ Editar datos',
     'pmodal.report': '⚐ Reportar contenido inapropiado',
 
+    // --- página pública de persona /p/[id] ---
+    'pp.backToSearch': 'Volver a buscar',
+    'pp.cta': 'Ver más personas',
+
     // --- estoy bien ---
     'safe.kicker': '● A salvo',
     'safe.title': 'Estoy bien',
@@ -451,6 +455,10 @@ export const dict = {
     'pmodal.share.copied': 'Copied!',
     'pmodal.edit': '✏️ Edit details',
     'pmodal.report': '⚐ Report inappropriate content',
+
+    // --- public person page /p/[id] ---
+    'pp.backToSearch': 'Back to search',
+    'pp.cta': 'See more people',
 
     // --- estoy bien ---
     'safe.kicker': '● Safe',

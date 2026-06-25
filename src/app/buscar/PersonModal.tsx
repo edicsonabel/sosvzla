@@ -57,7 +57,9 @@ export default function PersonModal({
 
   function shareUrl(): string {
     if (typeof window === 'undefined') return '';
-    return `${window.location.origin}/buscar`;
+    // Página propia de la persona: el link genera vista previa (foto + nombre)
+    // al pegarlo en redes y abre su ficha exacta.
+    return `${window.location.origin}/p/${person.id}`;
   }
   const shareText = `${person.name}${person.last_seen ? ` — ${person.last_seen}` : ''} · SOS Venezuela`;
 
