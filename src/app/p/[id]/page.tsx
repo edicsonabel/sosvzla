@@ -41,26 +41,40 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const p = await getPerson(id);
-  if (!p) return { title: 'SOS Venezuela' };
+  if (!p) {
+    return {
+      title: 'Persona no encontrada',
+      robots: { index: false, follow: true },
+    };
+  }
 
   const statusEs = dict.es[`person.status.${p.status}` as keyof typeof dict.es];
-  const title = `${p.name} — ${statusEs} · SOS Venezuela`;
+  const title = `${p.name} — ${statusEs}`;
   const desc = [p.last_seen ? `Vista en ${p.last_seen}` : null, p.description]
     .filter(Boolean)
     .join(' · ') || 'Ayuda a difundir y reunir a esta persona con su familia.';
+  const url = `https://sosvzla.com/p/${p.id}`;
+  // Si tiene foto, la usamos como preview; si no, cae al OG por defecto del sitio.
+  const images = p.photo_url
+    ? [{ url: p.photo_url, alt: `Foto de ${p.name}` }]
+    : undefined;
 
   return {
     title,
     description: desc,
+    alternates: { canonical: `/p/${p.id}` },
     openGraph: {
-      title,
+      title: `${title} · SOS Venezuela`,
       description: desc,
+      url,
+      siteName: 'SOS Venezuela',
+      locale: 'es_VE',
       type: 'profile',
-      images: p.photo_url ? [{ url: p.photo_url }] : undefined,
+      images,
     },
     twitter: {
       card: p.photo_url ? 'summary_large_image' : 'summary',
-      title,
+      title: `${title} · SOS Venezuela`,
       description: desc,
       images: p.photo_url ? [p.photo_url] : undefined,
     },
