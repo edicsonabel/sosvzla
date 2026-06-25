@@ -1,0 +1,351 @@
+/* ============================================================
+   SOS Venezuela — Sistema de diseño
+   Concepto: "utilitario humanitario" — herramienta de rescate seria,
+   alto contraste, legible bajo estrés y mala luz. Azul protección civil
+   + teal urgencia. Sin rojo (carga política) ni verde/rojo/amarillo juntos.
+   Tema claro/oscuro automático.
+   ============================================================ */
+
+/* Fuentes con carácter (no Inter/Roboto/Arial) */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Sometype+Mono:wght@400;500;700&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Paleta base */
+  --azul-900: #06243f;
+  --azul-800: #0b3d66;
+  --azul-700: #0e4d80;
+  --azul-600: #15639f;
+  --teal-500: #14b8a6;
+  --teal-400: #2dd4bf;
+  --ambar:    #f59e0b;
+  --ambar-d:  #b45309;
+  --verde:    #16a34a;
+  --slate-50: #f5f8fb;
+  --slate-100:#e8eef4;
+  --slate-300:#cbd5e1;
+  --slate-500:#64748b;
+  --slate-700:#334155;
+  --slate-900:#0f1b2d;
+
+  /* Tokens semánticos — TEMA CLARO */
+  --bg:        var(--slate-50);
+  --bg-elev:   #ffffff;
+  --texto:     var(--slate-900);
+  --texto-sec: var(--slate-500);
+  --borde:     var(--slate-100);
+  --primario:  var(--azul-800);
+  --primario-h:var(--azul-900);
+  --acento:    var(--teal-500);
+  --acento-soft: #d6f3ef;
+  --anillo:    rgba(20,184,166,.35);
+  --sombra:    0 1px 2px rgba(6,36,63,.06), 0 8px 24px -8px rgba(6,36,63,.18);
+  --grano:     .015;
+
+  --r: 14px;
+  --r-sm: 10px;
+  --display: 'Archivo', system-ui, sans-serif;
+  --body: 'Public Sans', system-ui, sans-serif;
+  --mono: 'Sometype Mono', ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #07101d;
+    --bg-elev:   #0d1b2c;
+    --texto:     #e8eef4;
+    --texto-sec: #8fa3bb;
+    --borde:     #1c2c40;
+    --primario:  var(--teal-500);
+    --primario-h:var(--teal-400);
+    --acento:    var(--teal-400);
+    --acento-soft: #0d2f30;
+    --anillo:    rgba(45,212,191,.4);
+    --sombra:    0 1px 2px rgba(0,0,0,.4), 0 12px 32px -10px rgba(0,0,0,.6);
+    --grano:     .03;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--texto);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  /* Atmósfera: halo radial sutil tras el header + grano */
+  background-image:
+    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--acento) 10%, transparent), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Grano fino para textura (evita planos muertos) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: var(--grano);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--bg-elev) 82%, transparent);
+  backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--borde);
+  padding: 0.7rem clamp(1rem, 4vw, 2rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: var(--texto);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.brand .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--acento);
+  box-shadow: 0 0 0 4px var(--acento-soft);
+  animation: latido 2s ease-in-out infinite;
+}
+@keyframes latido {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: .7; }
+}
+.topbar nav { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.topbar nav a {
+  color: var(--texto-sec);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  transition: color .15s, background .15s;
+}
+.topbar nav a:hover { color: var(--texto); background: var(--borde); }
+
+/* ---------- Layout ---------- */
+.container { max-width: 920px; margin: 0 auto; padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem) 4rem; }
+.footer {
+  text-align: center; color: var(--texto-sec);
+  padding: 2rem 1rem; font-size: 0.82rem;
+  font-family: var(--mono); letter-spacing: 0.02em;
+}
+
+/* ---------- Tipografía ---------- */
+h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 0.6rem;
+}
+h2 { font-family: var(--display); font-weight: 700; letter-spacing: -0.02em; }
+h3 { font-family: var(--display); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+p { margin: 0 0 1rem; max-width: 60ch; }
+p.lead { font-size: 1.1rem; color: var(--texto-sec); }
+
+a { color: var(--acento); }
+
+/* Etiqueta superior (kicker) */
+.kicker {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--acento);
+  background: var(--acento-soft);
+  padding: 0.3rem 0.7rem; border-radius: 999px;
+  margin-bottom: 0.9rem;
+}
+
+/* ---------- Botones ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  background: var(--primario);
+  color: #fff;
+  border: none;
+  padding: 0.9rem 1.4rem;
+  border-radius: var(--r-sm);
+  font-family: var(--display);
+  font-size: 1rem; font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer; text-decoration: none; text-align: center;
+  box-shadow: var(--sombra);
+  transition: transform .12s ease, background .15s, box-shadow .15s;
+}
+.btn:hover { background: var(--primario-h); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--anillo); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn-sec {
+  background: transparent; color: var(--primario);
+  border: 1.5px solid var(--borde); box-shadow: none;
+}
+@media (prefers-color-scheme: dark) { .btn-sec { color: var(--texto); } }
+.btn-sec:hover { background: var(--borde); }
+
+/* Botón SOS gigante (acción primaria home) */
+.btn-sos {
+  width: 100%;
+  font-size: 1.35rem;
+  padding: 1.3rem;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, var(--azul-800), var(--azul-600));
+  position: relative;
+  overflow: hidden;
+}
+.btn-sos::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--teal-400) 35%, transparent), transparent 50%);
+  opacity: .5;
+}
+.btn-sos:hover { background: linear-gradient(135deg, var(--azul-900), var(--azul-700)); }
+
+/* ---------- Tarjetas acción ---------- */
+.grid-acciones { display: grid; gap: 0.85rem; grid-template-columns: 1fr 1fr; margin-top: 1.5rem; }
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--borde);
+  border-radius: var(--r);
+  padding: 1.25rem;
+  text-decoration: none;
+  color: var(--texto);
+  box-shadow: var(--sombra);
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease, border-color .15s;
+}
+.card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--acento); transform: scaleY(0); transform-origin: top;
+  transition: transform .2s ease;
+}
+.card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--acento) 50%, var(--borde)); }
+.card:hover::before { transform: scaleY(1); }
+.card .emoji { font-size: 1.9rem; line-height: 1; }
+.card h3 { margin: 0.6rem 0 0.25rem; font-size: 1.15rem; }
+.card p { margin: 0; color: var(--texto-sec); font-size: 0.9rem; }
+
+/* ---------- Formularios ---------- */
+form { display: grid; gap: 1rem; margin-top: 1.25rem; max-width: 560px; }
+label { font-weight: 600; display: grid; gap: 0.4rem; font-size: 0.95rem; }
+input, select, textarea {
+  padding: 0.8rem 0.9rem;
+  border: 1.5px solid var(--borde);
+  border-radius: var(--r-sm);
+  font-size: 1rem; font-family: inherit;
+  background: var(--bg-elev);
+  color: var(--texto);
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--acento);
+  box-shadow: 0 0 0 4px var(--anillo);
+}
+textarea { min-height: 100px; resize: vertical; }
+::placeholder { color: var(--texto-sec); opacity: .7; }
+
+/* ---------- Avisos ---------- */
+.aviso { padding: 0.85rem 1rem; border-radius: var(--r-sm); font-weight: 600; font-size: 0.95rem; border: 1px solid transparent; }
+.aviso-ok   { background: color-mix(in srgb, var(--verde) 12%, var(--bg-elev)); color: var(--verde); border-color: color-mix(in srgb, var(--verde) 30%, transparent); }
+.aviso-cola { background: color-mix(in srgb, var(--ambar) 14%, var(--bg-elev)); color: var(--ambar-d); border-color: color-mix(in srgb, var(--ambar) 35%, transparent); }
+.aviso-err  { background: color-mix(in srgb, #dc2626 12%, var(--bg-elev)); color: #dc2626; border-color: color-mix(in srgb, #dc2626 30%, transparent); }
+@media (prefers-color-scheme: dark) { .aviso-cola { color: var(--ambar); } }
+
+/* ---------- Listas / items ---------- */
+.lista { display: grid; gap: 0.8rem; margin-top: 1.25rem; }
+.item {
+  background: var(--bg-elev); border: 1px solid var(--borde);
+  border-radius: var(--r); padding: 1rem 1.1rem; box-shadow: var(--sombra);
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.2rem 0.6rem; border-radius: 999px;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge-pending, .badge-missing { background: var(--acento-soft); color: var(--azul-700); }
+.badge-dispatched { background: color-mix(in srgb, var(--ambar) 18%, var(--bg-elev)); color: var(--ambar-d); }
+.badge-resolved, .badge-safe { background: color-mix(in srgb, var(--verde) 14%, var(--bg-elev)); color: var(--verde); }
+.badge-found { background: color-mix(in srgb, var(--azul-600) 16%, var(--bg-elev)); color: var(--azul-600); }
+.badge-false_report { background: var(--borde); color: var(--texto-sec); }
+@media (prefers-color-scheme: dark) {
+  .badge-pending, .badge-missing { color: var(--teal-400); }
+  .badge-dispatched { color: var(--ambar); }
+}
+
+/* ---------- Mapa ---------- */
+.mapa-wrap {
+  height: 70vh; min-height: 440px;
+  border-radius: var(--r); overflow: hidden;
+  margin-top: 1.25rem; border: 1px solid var(--borde);
+  box-shadow: var(--sombra);
+}
+.leyenda { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; margin-top: 0.5rem; font-size: 0.85rem; color: var(--texto-sec); }
+.leyenda span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.leyenda i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 2px solid var(--bg-elev); }
+
+/* Reveal escalonado en carga */
+.reveal { animation: subir .5s cubic-bezier(.2,.7,.2,1) both; }
+.reveal:nth-child(2) { animation-delay: .06s; }
+.reveal:nth-child(3) { animation-delay: .12s; }
+.reveal:nth-child(4) { animation-delay: .18s; }
+@keyframes subir { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Login Google ---------- */
+.btn-google {
+  background: #fff;
+  color: #1f2937;
+  border: 1.5px solid var(--borde);
+  box-shadow: var(--sombra);
+}
+.btn-google:hover { background: #f8fafc; }
+@media (prefers-color-scheme: dark) {
+  .btn-google { background: var(--bg-elev); color: var(--texto); }
+  .btn-google:hover { background: var(--borde); }
+}
+
+/* ---------- Panel voluntarios ---------- */
+.filtros { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.acciones { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; padding-top: 0.7rem; border-top: 1px solid var(--borde); }
+.chip {
+  font-family: var(--body); font-size: 0.82rem; font-weight: 600;
+  padding: 0.4rem 0.8rem; border-radius: 999px;
+  border: 1.5px solid var(--borde); background: var(--bg-elev);
+  color: var(--texto); cursor: pointer;
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.chip:hover { border-color: var(--acento); transform: translateY(-1px); }
+.chip:active { transform: translateY(0); }
+.chip-on { background: var(--primario); color: #fff; border-color: var(--primario); }
+.chip-peligro { color: var(--ambar-d); border-color: color-mix(in srgb, var(--ambar) 40%, var(--borde)); }
+.chip-peligro:hover { border-color: var(--ambar); background: color-mix(in srgb, var(--ambar) 12%, var(--bg-elev)); }
+@media (prefers-color-scheme: dark) { .chip-peligro { color: var(--ambar); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation: none !important; transition: none !important; }
+}
+
+@media (max-width: 540px) {
+  .grid-acciones { grid-template-columns: 1fr; }
+}

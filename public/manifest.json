@@ -1,0 +1,17 @@
+{
+  "name": "SOS Venezuela",
+  "short_name": "SOS",
+  "description": "Plataforma de ayuda en emergencia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07101d",
+  "theme_color": "#0b3d66",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
