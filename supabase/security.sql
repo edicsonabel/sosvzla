@@ -135,7 +135,8 @@ create or replace function public.update_person_self(
   p_photo_url   text
 )
 returns public.persons_public
-language plpgsql security definer set search_path = public as $$
+-- search_path incluye 'extensions': en Supabase pgcrypto (digest) vive ahí.
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_hash text := encode(digest(coalesce(p_editor_doc, ''), 'sha256'), 'hex');
   v_row  public.persons;
@@ -181,7 +182,8 @@ create or replace function public.claim_person_found(
   p_editor_doc text
 )
 returns public.persons_public
-language plpgsql security definer set search_path = public as $$
+-- search_path incluye 'extensions': en Supabase pgcrypto (digest) vive ahí.
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_hash text := encode(digest(coalesce(p_editor_doc, ''), 'sha256'), 'hex');
   v_row  public.persons;
