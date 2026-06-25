@@ -25,6 +25,8 @@ drop function if exists public.sos_cercanos(double precision, double precision, 
 drop function if exists public.sos_cercanos_publico(double precision, double precision, double precision) cascade;
 drop function if exists public.nearby_reports(double precision, double precision, double precision) cascade;
 drop function if exists public.nearby_reports_public(double precision, double precision, double precision) cascade;
+drop function if exists public.search_persons_public(text) cascade;
+drop function if exists public.f_unaccent(text) cascade;
 drop function if exists public.es_voluntario() cascade;
 drop function if exists public.is_volunteer() cascade;
 drop function if exists public.check_rate_limit() cascade;

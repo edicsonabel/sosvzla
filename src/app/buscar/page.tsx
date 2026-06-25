@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { supabase, type Person } from '@/lib/supabase';
 import { submitOrQueue } from '@/lib/offlineQueue';
 import { uploadPhoto } from '@/lib/uploadPhoto';
@@ -41,27 +41,31 @@ export default function Search() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  async function search() {
-    // Vista pública: sin contacto.
-    let query = supabase.from('persons_public').select('*').order('created_at', { ascending: false });
-    if (q.trim()) {
-      const term = q.trim();
-      // Busca por nombre o por documento (cédula/DNI).
-      query = query.or(`name.ilike.%${term}%,document_id.ilike.%${term}%`);
-    }
-    const { data } = await query;
+  // Token de la última búsqueda lanzada: descarta respuestas que llegan
+  // tarde (race) cuando el usuario teclea rápido y se solapan peticiones.
+  const searchSeq = useRef(0);
+
+  const search = useCallback(async (raw?: string) => {
+    const term = (raw ?? q).trim();
+    const seq = ++searchSeq.current;
+    // RPC público: busca por nombre o documento, insensible a acentos/ñ/mayúsc.
+    // (Vista pública: sin contacto.) Sin término → lista todo por fecha.
+    const { data } = await supabase.rpc('search_persons_public', { p_q: term });
+    if (seq !== searchSeq.current) return; // llegó una respuesta más nueva
     if (data) setResults(data as Person[]);
     // Analítica: solo búsquedas reales con término (no el listado inicial).
     // No mandamos el texto buscado (podría ser un nombre/cédula = PII).
-    if (q.trim().length >= 2) {
+    if (term.length >= 2) {
       track('search_performed', { hits: data?.length ?? 0 });
     }
-  }
+  }, [q]);
 
+  // Búsqueda en vivo con debounce: dispara 350ms tras la última tecla.
+  // El listado inicial (q vacío) también pasa por aquí en el primer render.
   useEffect(() => {
-    search();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const id = setTimeout(() => search(q), 350);
+    return () => clearTimeout(id);
+  }, [q, search]);
 
   async function report(e: React.FormEvent) {
     e.preventDefault();
@@ -128,10 +132,10 @@ export default function Search() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t('search.input.ph')}
-          onKeyDown={(e) => e.key === 'Enter' && search()}
+          onKeyDown={(e) => e.key === 'Enter' && search(q)}
           style={{ flex: 1 }}
         />
-        <button className="btn" onClick={search}>{t('search.btn')}</button>
+        <button className="btn" onClick={() => search(q)}>{t('search.btn')}</button>
       </div>
 
       <button

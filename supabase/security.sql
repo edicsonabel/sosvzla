@@ -93,6 +93,41 @@ with (security_invoker = false) as
 grant select on public.reports_public to anon, authenticated;
 grant select on public.persons_public to anon, authenticated;
 
+-- ------------------------------------------------------------
+-- 2.c BÚSQUEDA INSENSIBLE A ACENTOS Y MAYÚSCULAS
+--    "maria" debe encontrar "María"; "nino" debe encontrar "Niño".
+--    unaccent() normaliza tildes y ñ→n; lower() ignora mayúsculas.
+--    Se aplica a AMBOS lados (término y dato), por eso va en un RPC y no
+--    en un .ilike() del cliente.
+-- ------------------------------------------------------------
+create extension if not exists unaccent with schema extensions;
+create extension if not exists pg_trgm with schema extensions;
+
+-- Índice funcional: acelera la búsqueda normalizada por nombre.
+-- IMMUTABLE wrapper sobre unaccent (unaccent es STABLE por defecto y no
+-- se puede indexar directo).
+create or replace function public.f_unaccent(text)
+returns text
+language sql immutable parallel safe set search_path = public, extensions as $$
+  select extensions.unaccent($1);
+$$;
+
+create index if not exists idx_persons_name_unaccent
+  on public.persons using gin (public.f_unaccent(lower(name)) gin_trgm_ops);
+
+create or replace function public.search_persons_public(p_q text)
+returns setof public.persons_public
+language sql stable security definer set search_path = public, extensions as $$
+  select id, name, document_id, status, last_seen, description, photo_url, created_at
+  from public.persons
+  where p_q is null or btrim(p_q) = ''
+     or public.f_unaccent(lower(name)) like '%' || public.f_unaccent(lower(btrim(p_q))) || '%'
+     or public.f_unaccent(lower(coalesce(document_id, '')))
+          like '%' || public.f_unaccent(lower(btrim(p_q))) || '%'
+  order by created_at desc;
+$$;
+grant execute on function public.search_persons_public to anon, authenticated;
+
 -- RPC de cercanos: versión pública sin contacto.
 create or replace function public.nearby_reports_public(
   p_lat double precision,
