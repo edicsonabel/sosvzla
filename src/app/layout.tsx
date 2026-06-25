@@ -2,7 +2,12 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ServiceWorker from './ServiceWorker';
 import { LanguageProvider } from '@/lib/i18n';
+import { ThemeProvider } from '@/lib/theme';
 import { Nav, Footer } from './Nav';
+
+// Anti-FOUC: aplica el tema guardado en <html> antes del primer paint, para
+// que no parpadee de claro a oscuro al cargar.
+const themeInit = `(function(){try{var t=localStorage.getItem('sos_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://sosvzla.com'),
@@ -36,12 +41,17 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body>
         <LanguageProvider>
-          <ServiceWorker />
-          <Nav />
-          <main className="container">{children}</main>
-          <Footer />
+          <ThemeProvider>
+            <ServiceWorker />
+            <Nav />
+            <main className="container">{children}</main>
+            <Footer />
+          </ThemeProvider>
         </LanguageProvider>
       </body>
     </html>

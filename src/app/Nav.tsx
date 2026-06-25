@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useT, LangToggle } from '@/lib/i18n';
+import { ThemeToggle } from '@/lib/theme';
 
 // Barra de navegación traducible + toggle de idioma. Cliente porque usa useT.
 export function Nav() {
@@ -19,6 +20,7 @@ export function Nav() {
         <Link href="/estoy-bien">{t('nav.safe')}</Link>
         <Link href="/emergencias">{t('nav.phones')}</Link>
         <Link href="/voluntarios">{t('nav.volunteers')}</Link>
+        <ThemeToggle />
         <LangToggle />
       </nav>
     </header>

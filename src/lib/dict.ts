@@ -16,6 +16,9 @@ export const dict = {
     'nav.phones': 'Teléfonos',
     'nav.volunteers': 'Voluntarios',
     'footer.tagline': 'proyecto solidario · datos abiertos · ayuda mutua',
+    'theme.auto': 'Tema: automático (toca para cambiar)',
+    'theme.light': 'Tema: claro (toca para cambiar)',
+    'theme.dark': 'Tema: oscuro (toca para cambiar)',
 
     // --- home ---
     'home.kicker': '● Respuesta de emergencia',
@@ -292,6 +295,9 @@ export const dict = {
     'nav.phones': 'Phones',
     'nav.volunteers': 'Volunteers',
     'footer.tagline': 'solidarity project · open data · mutual aid',
+    'theme.auto': 'Theme: automatic (tap to change)',
+    'theme.light': 'Theme: light (tap to change)',
+    'theme.dark': 'Theme: dark (tap to change)',
 
     // --- home ---
     'home.kicker': '● Emergency response',
