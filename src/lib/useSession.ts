@@ -8,6 +8,7 @@ export interface SessionState {
   loading: boolean;
   session: Session | null;
   isVolunteer: boolean;
+  isAdmin: boolean;
 }
 
 // Hook de sesión + comprobación de rol voluntario.
@@ -16,6 +17,7 @@ export interface SessionState {
 export function useSession(): SessionState {
   const [session, setSession] = useState<Session | null>(null);
   const [isVolunteer, setIsVolunteer] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,15 +25,19 @@ export function useSession(): SessionState {
 
     async function checkRole(uid: string | undefined) {
       if (!uid) {
-        if (active) setIsVolunteer(false);
+        if (active) { setIsVolunteer(false); setIsAdmin(false); }
         return;
       }
+      // Lee la propia fila (RLS permite ver solo la tuya); trae rol.
       const { data } = await supabase
         .from('volunteers')
-        .select('user_id')
+        .select('role')
         .eq('user_id', uid)
         .maybeSingle();
-      if (active) setIsVolunteer(!!data);
+      if (active) {
+        setIsVolunteer(!!data);
+        setIsAdmin(data?.role === 'admin');
+      }
     }
 
     supabase.auth.getSession().then(async ({ data }) => {
@@ -53,5 +59,5 @@ export function useSession(): SessionState {
     };
   }, []);
 
-  return { loading, session, isVolunteer };
+  return { loading, session, isVolunteer, isAdmin };
 }

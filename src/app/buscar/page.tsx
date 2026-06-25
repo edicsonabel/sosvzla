@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase, type Person } from '@/lib/supabase';
 import { submitOrQueue } from '@/lib/offlineQueue';
+import { uploadPhoto } from '@/lib/uploadPhoto';
 
 const BADGE: Record<string, string> = {
   missing: 'badge-missing',
@@ -26,7 +27,10 @@ export default function Search() {
   const [lastSeen, setLastSeen] = useState('');
   const [description, setDescription] = useState('');
   const [contact, setContact] = useState('');
+  const [photo, setPhoto] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState<null | 'ok' | 'queued'>(null);
+  const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   async function search() {
     // Vista pública: sin contacto.
@@ -43,12 +47,28 @@ export default function Search() {
 
   async function report(e: React.FormEvent) {
     e.preventDefault();
+    setPhotoError(null);
+
+    // Sube la foto primero (requiere red). Si falla, avisa pero deja seguir.
+    let photoUrl: string | null = null;
+    if (photo) {
+      setUploading(true);
+      const up = await uploadPhoto(photo);
+      setUploading(false);
+      if (up.error) {
+        setPhotoError(up.error);
+        return; // no enviamos si la foto que el usuario eligió falló
+      }
+      photoUrl = up.url;
+    }
+
     const r = await submitOrQueue('persons', {
       name,
       status: 'missing',
       last_seen: lastSeen || null,
       description: description || null,
       contact: contact || null,
+      photo_url: photoUrl,
     });
     setSubmitted(r.queued ? 'queued' : 'ok');
     if (!r.queued) {
@@ -56,6 +76,7 @@ export default function Search() {
       setLastSeen('');
       setDescription('');
       setContact('');
+      setPhoto(null);
       search();
     }
   }
@@ -103,7 +124,28 @@ export default function Search() {
             Tu contacto
             <input value={contact} onChange={(e) => setContact(e.target.value)} />
           </label>
-          <button className="btn" type="submit">Reportar</button>
+          <label>
+            Foto (opcional) — ayuda a identificar
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => {
+                setPhotoError(null);
+                setPhoto(e.target.files?.[0] ?? null);
+              }}
+            />
+          </label>
+          {photo && (
+            <img
+              src={URL.createObjectURL(photo)}
+              alt="Vista previa"
+              style={{ maxWidth: 140, borderRadius: 'var(--r-sm)', border: '1px solid var(--borde)' }}
+            />
+          )}
+          {photoError && <div className="aviso aviso-err">{photoError}</div>}
+          <button className="btn" type="submit" disabled={uploading}>
+            {uploading ? 'Subiendo foto…' : 'Reportar'}
+          </button>
           {submitted === 'ok' && <div className="aviso aviso-ok">✅ Reporte registrado.</div>}
           {submitted === 'queued' && (
             <div className="aviso aviso-cola">⏳ Sin conexión: se enviará al volver la red.</div>
@@ -114,13 +156,22 @@ export default function Search() {
       <div className="lista">
         {results.length === 0 && <p>Sin resultados.</p>}
         {results.map((p) => (
-          <div className="item" key={p.id}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-              <strong>{p.name}</strong>
-              <span className={`badge ${BADGE[p.status]}`}>{STATUS_LABEL[p.status] ?? p.status}</span>
+          <div className="item" key={p.id} style={{ display: 'flex', gap: '0.85rem' }}>
+            {p.photo_url && (
+              <img
+                src={p.photo_url}
+                alt={p.name}
+                style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--r-sm)', flexShrink: 0, border: '1px solid var(--borde)' }}
+              />
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <strong>{p.name}</strong>
+                <span className={`badge ${BADGE[p.status]}`}>{STATUS_LABEL[p.status] ?? p.status}</span>
+              </div>
+              {p.last_seen && <div>📍 {p.last_seen}</div>}
+              {p.description && <div style={{ color: 'var(--texto-sec)' }}>{p.description}</div>}
             </div>
-            {p.last_seen && <div>📍 {p.last_seen}</div>}
-            {p.description && <div style={{ color: '#6b7280' }}>{p.description}</div>}
           </div>
         ))}
       </div>

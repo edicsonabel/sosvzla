@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { supabase, type Report, type ReportStatus } from '@/lib/supabase';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -26,7 +27,7 @@ const FILTERS: { value: ReportStatus | 'active'; label: string }[] = [
   { value: 'false_report', label: 'Falsos' },
 ];
 
-export default function VolunteerPanel({ email }: { email: string }) {
+export default function VolunteerPanel({ email, isAdmin }: { email: string; isAdmin: boolean }) {
   const [items, setItems] = useState<Report[]>([]);
   const [filter, setFilter] = useState<ReportStatus | 'active'>('active');
   const [loading, setLoading] = useState(true);
@@ -73,9 +74,14 @@ export default function VolunteerPanel({ email }: { email: string }) {
           <span className="kicker">● Coordinación</span>
           <h1>Panel de voluntarios</h1>
         </div>
-        <button className="btn btn-sec" onClick={() => supabase.auth.signOut()}>
-          Salir ({email})
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {isAdmin && (
+            <Link href="/admin" className="btn btn-sec">★ Gestión de voluntarios</Link>
+          )}
+          <button className="btn btn-sec" onClick={() => supabase.auth.signOut()}>
+            Salir ({email})
+          </button>
+        </div>
       </div>
 
       <p className="lead">

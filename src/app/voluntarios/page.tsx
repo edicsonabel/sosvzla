@@ -6,7 +6,7 @@ import { useSession } from '@/lib/useSession';
 import VolunteerPanel from './VolunteerPanel';
 
 export default function Volunteers() {
-  const { loading, session, isVolunteer } = useSession();
+  const { loading, session, isVolunteer, isAdmin } = useSession();
   const [error, setError] = useState<string | null>(null);
 
   async function loginWithGoogle() {
@@ -73,5 +73,5 @@ export default function Volunteers() {
   }
 
   // Voluntario autorizado
-  return <VolunteerPanel email={session.user.email ?? ''} />;
+  return <VolunteerPanel email={session.user.email ?? ''} isAdmin={isAdmin} />;
 }
