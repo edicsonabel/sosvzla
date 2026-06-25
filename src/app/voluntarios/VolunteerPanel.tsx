@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase, type Report, type ReportStatus } from '@/lib/supabase';
 import { useT } from '@/lib/i18n';
 import type { DictKey } from '@/lib/dict';
+import PersonsPanel from './PersonsPanel';
 
 const TYPE_LABEL: Record<string, DictKey> = {
   medical: 'type.medical.short',
@@ -31,6 +32,7 @@ const FILTERS: { value: ReportStatus | 'active'; label: DictKey }[] = [
 
 export default function VolunteerPanel({ email, isAdmin }: { email: string; isAdmin: boolean }) {
   const { t } = useT();
+  const [tab, setTab] = useState<'reports' | 'persons'>('reports');
   const [items, setItems] = useState<Report[]>([]);
   const [filter, setFilter] = useState<ReportStatus | 'active'>('active');
   const [loading, setLoading] = useState(true);
@@ -87,6 +89,29 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
         </div>
       </div>
 
+      <div className="tabs" role="tablist">
+        <button
+          role="tab"
+          aria-selected={tab === 'reports'}
+          className={`tab ${tab === 'reports' ? 'tab-on' : ''}`}
+          onClick={() => setTab('reports')}
+        >
+          {t('vpanel.tab.reports')}
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'persons'}
+          className={`tab ${tab === 'persons' ? 'tab-on' : ''}`}
+          onClick={() => setTab('persons')}
+        >
+          {t('vpanel.tab.persons')}
+        </button>
+      </div>
+
+      {tab === 'persons' && <PersonsPanel />}
+
+      {tab === 'reports' && (
+      <>
       <p className="lead">
         {t('vpanel.summary', {
           pending: countBy('pending'),
@@ -162,6 +187,8 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
           </div>
         ))}
       </div>
+      </>
+      )}
     </>
   );
 }

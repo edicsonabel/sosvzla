@@ -208,6 +208,21 @@ export const dict = {
     'vpanel.action.resolve': '✓ Resuelto',
     'vpanel.action.reopen': '↺ Reabrir',
     'vpanel.action.false': '⚑ Falso',
+    'vpanel.tab.reports': 'Reportes SOS',
+    'vpanel.tab.persons': 'Personas',
+
+    // --- persons panel (voluntarios) ---
+    'ppanel.summary': '{missing} desaparecidos · {safe} a salvo · {found} encontrados',
+    'ppanel.filter.all': 'Todas',
+    'ppanel.filter.missing': 'Desaparecidos',
+    'ppanel.filter.safe': 'A salvo',
+    'ppanel.filter.found': 'Encontrados',
+    'ppanel.loading': 'Cargando personas…',
+    'ppanel.empty': 'No hay personas en esta vista.',
+    'ppanel.reportedBy': 'Reportó: {who}',
+    'ppanel.action.missing': '🔎 Desaparecido',
+    'ppanel.action.safe': '✅ A salvo',
+    'ppanel.action.found': '🙌 Encontrado',
 
     // --- admin panel ---
     'apanel.pending': 'Solicitudes pendientes',
@@ -439,6 +454,21 @@ export const dict = {
     'vpanel.action.resolve': '✓ Resolved',
     'vpanel.action.reopen': '↺ Reopen',
     'vpanel.action.false': '⚑ False',
+    'vpanel.tab.reports': 'SOS reports',
+    'vpanel.tab.persons': 'People',
+
+    // --- persons panel (volunteers) ---
+    'ppanel.summary': '{missing} missing · {safe} safe · {found} found',
+    'ppanel.filter.all': 'All',
+    'ppanel.filter.missing': 'Missing',
+    'ppanel.filter.safe': 'Safe',
+    'ppanel.filter.found': 'Found',
+    'ppanel.loading': 'Loading people…',
+    'ppanel.empty': 'No people in this view.',
+    'ppanel.reportedBy': 'Reported by: {who}',
+    'ppanel.action.missing': '🔎 Missing',
+    'ppanel.action.safe': '✅ Safe',
+    'ppanel.action.found': '🙌 Found',
 
     // --- admin panel ---
     'apanel.pending': 'Pending requests',

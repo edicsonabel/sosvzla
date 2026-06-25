@@ -318,6 +318,13 @@ textarea { min-height: 100px; resize: vertical; }
 /* Compartir SOS */
 .share-sos input { font-family: var(--mono); font-size: 0.85rem; }
 
+/* Pestañas del panel de voluntarios */
+.tabs { display: flex; gap: 0.25rem; margin: 1rem 0; border-bottom: 1px solid var(--borde); }
+.tab { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 0.6rem 1rem; font-weight: 600; color: var(--texto-sec); cursor: pointer; margin-bottom: -1px; }
+.tab:hover { color: var(--texto); }
+.tab-on { color: var(--primario); border-bottom-color: var(--primario); }
+@media (prefers-color-scheme: dark) { .tab-on { color: var(--acento); border-bottom-color: var(--acento); } }
+
 /* Toggle de idioma en la nav */
 .lang-toggle { font-family: var(--mono); font-weight: 700; font-size: 0.8rem; padding: 0.2rem 0.5rem; border: 1px solid var(--borde); border-radius: var(--r-sm); background: transparent; color: var(--texto-sec); cursor: pointer; }
 .lang-toggle:hover { border-color: var(--acento); color: var(--acento); }
