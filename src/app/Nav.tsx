@@ -20,13 +20,15 @@ function GithubIcon() {
 export function Nav() {
   const { t } = useT();
   const pathname = usePathname();
-  const links: [string, string][] = [
-    ['/sos', t('nav.report')],
-    ['/mapa', t('nav.map')],
-    ['/buscar', t('nav.search')],
-    ['/estoy-bien', t('nav.safe')],
-    ['/emergencias', t('nav.phones')],
-    ['/voluntarios', t('nav.volunteers')],
+  // [ruta, label, icono]. El icono es decorativo (aria-hidden); el label da
+  // el nombre accesible. Iconos consistentes con las tarjetas de la home.
+  const links: [string, string, string][] = [
+    ['/sos', t('nav.report'), '🆘'],
+    ['/mapa', t('nav.map'), '🗺️'],
+    ['/buscar', t('nav.search'), '🔎'],
+    ['/estoy-bien', t('nav.safe'), '✅'],
+    ['/emergencias', t('nav.phones'), '📞'],
+    ['/voluntarios', t('nav.volunteers'), '🤝'],
   ];
   return (
     <header className="topbar">
@@ -35,23 +37,26 @@ export function Nav() {
         SOS&nbsp;Venezuela
       </Link>
       <nav>
-        {links.map(([href, label]) => (
+        {links.map(([href, label, icon]) => (
           <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}>
-            {label}
+            <span className="nav-icon" aria-hidden="true">{icon}</span>
+            <span className="nav-label">{label}</span>
           </Link>
         ))}
-        <ThemeToggle />
-        <LangToggle />
-        <a
-          href={REPO_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="github-link"
-          aria-label={t('nav.github')}
-          title={t('nav.github')}
-        >
-          <GithubIcon />
-        </a>
+        <div className="nav-controls">
+          <ThemeToggle />
+          <LangToggle />
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="github-link"
+            aria-label={t('nav.github')}
+            title={t('nav.github')}
+          >
+            <GithubIcon />
+          </a>
+        </div>
       </nav>
     </header>
   );
@@ -63,6 +68,8 @@ export function Footer() {
     <footer className="footer">
       <span>{t('footer.tagline')}</span>
       <span className="footer-contribute">
+        <Link href="/estadisticas">{t('footer.stats')}</Link>
+        {' · '}
         {t('footer.openSource')}{' '}
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
           {t('footer.contribute')} ↗

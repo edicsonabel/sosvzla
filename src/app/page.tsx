@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useT } from '@/lib/i18n';
+import StatsSummary from './StatsSummary';
+import PersonsStats from './PersonsStats';
 
 export default function Home() {
   const { t } = useT();
@@ -21,6 +23,8 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      <PersonsStats />
 
       <div className="grid-acciones">
         <Link href="/mapa" className="card reveal">
@@ -44,6 +48,8 @@ export default function Home() {
           <p>{t('home.card.phones.desc')}</p>
         </Link>
       </div>
+
+      <StatsSummary />
     </>
   );
 }

@@ -6,6 +6,7 @@ import ServiceWorker from './ServiceWorker';
 import { LanguageProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
 import { Nav, Footer } from './Nav';
+import PageViewTracker from './PageViewTracker';
 
 // Anti-FOUC: aplica el tema guardado en <html> antes del primer paint, para
 // que no parpadee de claro a oscuro al cargar.
@@ -119,6 +120,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LanguageProvider>
           <ThemeProvider>
             <ServiceWorker />
+            <PageViewTracker />
             <Nav />
             <main className="container">{children}</main>
             <Footer />
