@@ -30,6 +30,7 @@ export type PersonStatus = 'missing' | 'safe' | 'found';
 export interface Person {
   id: string;
   name: string;
+  document_id: string | null;
   status: PersonStatus;
   last_seen: string | null;
   description: string | null;
@@ -37,4 +38,37 @@ export interface Person {
   reported_by: string | null;
   contact: string | null;
   created_at: string;
+}
+
+// Editar un reporte propio: el reportante reenvía su cédula (clave). El RPC
+// la hashea en servidor y compara con editor_doc_hash. Devuelve la fila
+// pública actualizada o un error si la cédula no coincide.
+export interface PersonEdit {
+  name: string;
+  document_id: string;
+  last_seen: string;
+  description: string;
+  contact: string;
+  photo_url: string;
+}
+
+export async function updatePersonSelf(
+  id: string,
+  editorDoc: string,
+  fields: PersonEdit
+): Promise<{ person: Person | null; error: string | null }> {
+  const { data, error } = await supabase.rpc('update_person_self', {
+    p_id: id,
+    p_editor_doc: editorDoc,
+    p_name: fields.name,
+    p_document_id: fields.document_id,
+    p_last_seen: fields.last_seen,
+    p_description: fields.description,
+    p_contact: fields.contact,
+    p_photo_url: fields.photo_url,
+  });
+  if (error) {
+    return { person: null, error: error.message };
+  }
+  return { person: data as Person, error: null };
 }

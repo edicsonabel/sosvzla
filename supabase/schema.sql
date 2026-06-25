@@ -4,9 +4,10 @@
 -- Ejecutar en: Supabase Dashboard > SQL Editor > New query
 -- ============================================================
 
--- Extensiones: geo + uuid
+-- Extensiones: geo + uuid + cripto (hash de cédula del reportante)
 create extension if not exists postgis;
 create extension if not exists "uuid-ossp";
+create extension if not exists pgcrypto;
 
 -- ------------------------------------------------------------
 -- Tabla: reports  (reportes de emergencia geolocalizados)
@@ -50,6 +51,7 @@ create index if not exists idx_reports_status on public.reports (status);
 create table if not exists public.persons (
   id              uuid primary key default uuid_generate_v4(),
   name            text not null,
+  document_id     text,           -- cédula / DNI / pasaporte (texto libre)
   status          text not null default 'missing'
                   check (status in ('missing','safe','found')),
   last_seen       text,           -- última ubicación conocida (texto libre)
@@ -57,12 +59,20 @@ create table if not exists public.persons (
   photo_url       text,
   reported_by     text,           -- quién reporta
   contact         text,
+  -- Hash (sha256) de la cédula del REPORTANTE. Sirve de "clave" para editar
+  -- luego su propio reporte. Nunca se expone en la vista pública.
+  editor_doc_hash text,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
 
+-- Migración para BD existentes (idempotente):
+alter table public.persons add column if not exists document_id text;
+alter table public.persons add column if not exists editor_doc_hash text;
+
 create index if not exists idx_persons_name on public.persons using gin (to_tsvector('spanish', name));
 create index if not exists idx_persons_status on public.persons (status);
+create index if not exists idx_persons_document on public.persons (document_id);
 
 -- ------------------------------------------------------------
 -- RPC: reportes dentro de un radio (metros) de un punto
@@ -129,6 +139,6 @@ insert into public.reports (type, description, lat, lng, contact) values
   ('medical', 'Persona herida necesita atención urgente', 10.5000, -66.9170, NULL),
   ('water_food','Refugio sin agua potable hace 2 días', 10.4900, -66.8800, NULL);
 
-insert into public.persons (name, status, last_seen, description) values
-  ('Jose Perez', 'missing', 'Cerca de Plaza Bolívar', 'Hombre 45 años, camisa azul'),
-  ('Ana Gomez', 'safe', 'Refugio escuela municipal', 'Reportada a salvo por familiar');
+insert into public.persons (name, document_id, status, last_seen, description) values
+  ('Jose Perez', 'V-12345678', 'missing', 'Cerca de Plaza Bolívar', 'Hombre 45 años, camisa azul'),
+  ('Ana Gomez', 'V-23456789', 'safe', 'Refugio escuela municipal', 'Reportada a salvo por familiar');

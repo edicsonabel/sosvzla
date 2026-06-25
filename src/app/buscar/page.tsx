@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase, type Person } from '@/lib/supabase';
 import { submitOrQueue } from '@/lib/offlineQueue';
 import { uploadPhoto } from '@/lib/uploadPhoto';
+import { hashEditorDoc } from '@/lib/editorDoc';
+import EditPersonForm from './EditPersonForm';
 
 const BADGE: Record<string, string> = {
   missing: 'badge-missing',
@@ -21,12 +23,15 @@ export default function Search() {
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Person[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // formulario reportar desaparecido
   const [name, setName] = useState('');
+  const [documentId, setDocumentId] = useState('');
   const [lastSeen, setLastSeen] = useState('');
   const [description, setDescription] = useState('');
   const [contact, setContact] = useState('');
+  const [editorDoc, setEditorDoc] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState<null | 'ok' | 'queued'>(null);
   const [uploading, setUploading] = useState(false);
@@ -35,7 +40,11 @@ export default function Search() {
   async function search() {
     // Vista pública: sin contacto.
     let query = supabase.from('persons_public').select('*').order('created_at', { ascending: false });
-    if (q.trim()) query = query.ilike('name', `%${q.trim()}%`);
+    if (q.trim()) {
+      const term = q.trim();
+      // Busca por nombre o por documento (cédula/DNI).
+      query = query.or(`name.ilike.%${term}%,document_id.ilike.%${term}%`);
+    }
     const { data } = await query;
     if (data) setResults(data as Person[]);
   }
@@ -62,20 +71,27 @@ export default function Search() {
       photoUrl = up.url;
     }
 
+    // Hash de la cédula del reportante = clave para editar luego (opcional).
+    const editorHash = await hashEditorDoc(editorDoc);
+
     const r = await submitOrQueue('persons', {
       name,
+      document_id: documentId || null,
       status: 'missing',
       last_seen: lastSeen || null,
       description: description || null,
       contact: contact || null,
       photo_url: photoUrl,
+      editor_doc_hash: editorHash,
     });
     setSubmitted(r.queued ? 'queued' : 'ok');
     if (!r.queued) {
       setName('');
+      setDocumentId('');
       setLastSeen('');
       setDescription('');
       setContact('');
+      setEditorDoc('');
       setPhoto(null);
       search();
     }
@@ -91,7 +107,7 @@ export default function Search() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Nombre de la persona…"
+          placeholder="Nombre o cédula…"
           onKeyDown={(e) => e.key === 'Enter' && search()}
           style={{ flex: 1 }}
         />
@@ -113,6 +129,10 @@ export default function Search() {
             <input value={name} onChange={(e) => setName(e.target.value)} required />
           </label>
           <label>
+            Cédula / DNI (opcional)
+            <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder="V-12345678" />
+          </label>
+          <label>
             Última ubicación conocida
             <input value={lastSeen} onChange={(e) => setLastSeen(e.target.value)} />
           </label>
@@ -123,6 +143,10 @@ export default function Search() {
           <label>
             Tu contacto
             <input value={contact} onChange={(e) => setContact(e.target.value)} />
+          </label>
+          <label>
+            Tu cédula de reportante (opcional) — necesaria para editar luego
+            <input value={editorDoc} onChange={(e) => setEditorDoc(e.target.value)} placeholder="Tu cédula, p. ej. V-12345678" />
           </label>
           <label>
             Foto (opcional) — ayuda a identificar
@@ -156,22 +180,44 @@ export default function Search() {
       <div className="lista">
         {results.length === 0 && <p>Sin resultados.</p>}
         {results.map((p) => (
-          <div className="item" key={p.id} style={{ display: 'flex', gap: '0.85rem' }}>
-            {p.photo_url && (
-              <img
-                src={p.photo_url}
-                alt={p.name}
-                style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--r-sm)', flexShrink: 0, border: '1px solid var(--borde)' }}
+          <div className="item" key={p.id}>
+            <div style={{ display: 'flex', gap: '0.85rem' }}>
+              {p.photo_url && (
+                <img
+                  src={p.photo_url}
+                  alt={p.name}
+                  style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--r-sm)', flexShrink: 0, border: '1px solid var(--borde)' }}
+                />
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <strong>{p.name}</strong>
+                  <span className={`badge ${BADGE[p.status]}`}>{STATUS_LABEL[p.status] ?? p.status}</span>
+                </div>
+                {p.document_id && <div style={{ color: 'var(--texto-sec)' }}>🪪 {p.document_id}</div>}
+                {p.last_seen && <div>📍 {p.last_seen}</div>}
+                {p.description && <div style={{ color: 'var(--texto-sec)' }}>{p.description}</div>}
+                {editingId !== p.id && (
+                  <button
+                    className="btn btn-sec"
+                    style={{ marginTop: '0.5rem' }}
+                    onClick={() => setEditingId(p.id)}
+                  >
+                    ✏️ Editar
+                  </button>
+                )}
+              </div>
+            </div>
+            {editingId === p.id && (
+              <EditPersonForm
+                person={p}
+                onCancel={() => setEditingId(null)}
+                onSaved={(updated) => {
+                  setResults((rs) => rs.map((x) => (x.id === updated.id ? updated : x)));
+                  setEditingId(null);
+                }}
               />
             )}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-                <strong>{p.name}</strong>
-                <span className={`badge ${BADGE[p.status]}`}>{STATUS_LABEL[p.status] ?? p.status}</span>
-              </div>
-              {p.last_seen && <div>📍 {p.last_seen}</div>}
-              {p.description && <div style={{ color: 'var(--texto-sec)' }}>{p.description}</div>}
-            </div>
           </div>
         ))}
       </div>

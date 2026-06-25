@@ -78,7 +78,7 @@ with (security_invoker = false) as
 
 create or replace view public.persons_public
 with (security_invoker = false) as
-  select id, name, status, last_seen, description, photo_url, created_at
+  select id, name, document_id, status, last_seen, description, photo_url, created_at
   from public.persons;
 
 -- Conceder lectura de las vistas a los roles anónimo y autenticado.
@@ -108,6 +108,59 @@ language sql stable security definer set search_path = public as $$
   order by r.geo <-> ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography;
 $$;
 grant execute on function public.nearby_reports_public to anon, authenticated;
+
+-- ------------------------------------------------------------
+-- 3.b EDICIÓN PROPIA por el reportante (sin login)
+--    El reportante guardó el hash de su cédula al crear. Para editar,
+--    reenvía su cédula; el server la hashea y compara. Solo edita campos
+--    visibles; no permite cambiar status a 'found' ni tocar el hash.
+--    NOTA: el hash se calcula sha256 en cliente y servidor por igual.
+-- ------------------------------------------------------------
+create or replace function public.update_person_self(
+  p_id          uuid,
+  p_editor_doc  text,           -- cédula del reportante en claro
+  p_name        text,
+  p_document_id text,
+  p_last_seen   text,
+  p_description text,
+  p_contact     text,
+  p_photo_url   text
+)
+returns public.persons_public
+language plpgsql security definer set search_path = public as $$
+declare
+  v_hash text := encode(digest(coalesce(p_editor_doc, ''), 'sha256'), 'hex');
+  v_row  public.persons;
+  v_out  public.persons_public;
+begin
+  if coalesce(p_editor_doc, '') = '' then
+    raise exception 'Cédula requerida para editar.' using errcode = 'check_violation';
+  end if;
+
+  update public.persons p
+     set name        = coalesce(nullif(p_name, ''), p.name),
+         document_id = nullif(p_document_id, ''),
+         last_seen   = nullif(p_last_seen, ''),
+         description = nullif(p_description, ''),
+         contact     = nullif(p_contact, ''),
+         photo_url   = nullif(p_photo_url, ''),
+         updated_at  = now()
+   where p.id = p_id
+     and p.editor_doc_hash is not null
+     and p.editor_doc_hash = v_hash
+  returning * into v_row;
+
+  if v_row.id is null then
+    raise exception 'Cédula no coincide o el reporte no permite edición.'
+      using errcode = 'check_violation';
+  end if;
+
+  select id, name, document_id, status, last_seen, description, photo_url, created_at
+    into v_out
+    from public.persons where id = v_row.id;
+  return v_out;
+end $$;
+grant execute on function public.update_person_self to anon, authenticated;
 
 -- ------------------------------------------------------------
 -- 4. RATE LIMITING básico en insert anónimo (anti-spam)
