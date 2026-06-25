@@ -24,8 +24,10 @@ siempre: seguridad de los datos, accesibilidad, y que funcione con red mala.
 - **Código y base de datos en INGLÉS**: nombres de tablas, columnas, valores
   enum, funciones SQL, variables, funciones y archivos JS/TS. Sin excepciones.
 - **Español** solo en: textos visibles al usuario (UI), comentarios de código,
-  y las rutas de URL (`/sos`, `/mapa`, `/buscar`, `/estoy-bien`, `/voluntarios`
-  — son cara al usuario; NO renombrar, romperían enlaces).
+  y las rutas de URL (`/sos`, `/mapa`, `/buscar`, `/estoy-bien`, `/voluntarios`,
+  `/emergencias` — cara al usuario; NO renombrar, romperían enlaces). Las rutas
+  de enlace compartido `/r/[id]` (seguir un SOS) y `/p/[id]` (difundir persona)
+  se pegan en WhatsApp/redes: tampoco renombrar.
 
 ---
 
@@ -68,7 +70,7 @@ sol y en pantallas baratas. Nada de aspecto "AI-slop" ni juguete.
 
 ## Stack y comandos
 
-- **Next.js 15** (App Router) + **TypeScript** (strict).
+- **Next.js 16** (App Router) + **TypeScript** (strict).
 - **Bun** como gestor/runtime — NO usar npm/pnpm/yarn.
 - **Supabase**: Postgres + PostGIS (geo) + Realtime + Auth + Storage.
 - **Leaflet + OpenStreetMap** para mapas (sin Google Maps → sin facturación).
@@ -104,33 +106,56 @@ demo solo en PROD.
 ```
 src/
   app/
-    layout.tsx          # shell, nav, metadata, theme-color (claro/oscuro)
+    layout.tsx          # shell, metadata, theme-color (claro/oscuro)
+    Nav.tsx             # navegación
     page.tsx            # home
     globals.css         # SISTEMA DE DISEÑO completo (tokens, componentes)
-    sos/page.tsx        # reportar SOS (geolocalización + offline)
+    ServiceWorker.tsx   # registra public/sw.js (solo producción)
+    icon.svg / apple-icon.svg / opengraph-image.tsx / twitter-image.tsx  # iconos + OG
+    api/submit/route.ts # ÚNICA puerta de inserts anónimos (captcha + rate-limit)
+    sos/page.tsx        # reportar SOS (geolocalización opcional + offline)
     mapa/
       page.tsx          # wrapper (dynamic import, sin SSR)
-      ReportsMap.tsx    # mapa Leaflet, lee de vista reports_public, polling 15s
-    buscar/page.tsx     # buscar/reportar desaparecidos
+      ReportsMap.tsx    # mapa Leaflet, lee de vista reports_public, polling
+    buscar/
+      page.tsx          # buscar/reportar desaparecidos (cards tipo cartel)
+      PersonModal.tsx   # modal de detalle de una persona
+      EditPersonForm.tsx# edición propia por el reportante (cédula)
     estoy-bien/page.tsx # avisar "a salvo"
+    emergencias/page.tsx# directorio de números de emergencia (tel:)
+    r/[id]/page.tsx     # seguir un SOS (enlace compartible, lee vista pública)
+    p/[id]/page.tsx     # difundir una persona (server comp, OG dinámico)
     voluntarios/
       page.tsx          # login / guard de rol
-      VolunteerPanel.tsx # panel de coordinación
+      VolunteerPanel.tsx# panel de SOS (status, Realtime, filtros)
+      PersonsPanel.tsx  # panel de personas (confirmar/rechazar found_pending)
+      AdminPanel.tsx    # gestión de voluntarios (aprobar/rol)
+    admin/page.tsx      # guard de rol admin → AdminPanel
   lib/
-    supabase.ts         # cliente + tipos (Report, Person)
-    offlineQueue.ts     # cola offline (submitOrQueue/sync) + auto-sync al reconectar
-    useSession.ts       # hook sesión + rol volunteer
+    supabase.ts         # cliente navegador + tipos (Report, Person)
+    supabaseServer.ts   # cliente de servidor (secret key) para /api/submit
+    offlineQueue.ts     # cola offline (submitOrQueue/sync) → postea a /api/submit
+    useSession.ts       # hook sesión + rol volunteer/admin
+    i18n.tsx / dict.ts  # i18n ES/EN (provider + diccionario)
+    theme.tsx           # toggle de tema (auto/claro/oscuro)
+    Turnstile.tsx       # widget captcha
+    uploadPhoto.ts      # subida de foto a Storage (bucket photos)
+    ConfirmDialog.tsx   # modal de confirmación (cambios de estado críticos)
+    editorDoc.ts        # helpers de documento del editor
 supabase/
   schema.sql            # tablas, geo, RPC, RLS base, datos demo
   security.sql          # vistas públicas, rol voluntario, rate limit, RLS dura
+  admin.sql             # rol admin + aprobación de voluntarios
+  storage.sql           # bucket de fotos (5 MB, solo imágenes) + políticas
+  reset.sql             # reset idempotente (DEV)
 public/
-  manifest.json, icon.svg
+  manifest.json, icon.svg, sw.js, offline.html
 ```
 
-**Orden de SQL en Supabase:** `schema.sql` primero, luego `security.sql`.
-Para **recargar** un esquema cambiado, ejecutar antes `reset.sql` (idempotente,
-borra versiones español e inglés) → luego schema → security. En DEV resetea
-libre; en PROD nunca `reset.sql` con datos reales sin exportar antes.
+**Orden de SQL en Supabase:** `schema.sql` → `security.sql` → `admin.sql` →
+`storage.sql`. Para **recargar** un esquema cambiado, ejecutar antes `reset.sql`
+(idempotente, borra versiones español e inglés) → luego el orden anterior. En
+DEV resetea libre; en PROD nunca `reset.sql` con datos reales sin exportar antes.
 
 ---
 
@@ -216,11 +241,11 @@ el panel de voluntarios los muestra con aviso "Sin GPS".
 
 - [x] ~~CAPTCHA / rate-limit por IP en inserts.~~ Hecho (ver arriba).
 - [x] ~~Service Worker real para offline.~~ Hecho (`public/sw.js`).
-- [ ] Subida de fotos (Supabase Storage con límite de tamaño + validación).
+- [x] ~~Subida de fotos (Storage, límite de tamaño + validación).~~ Hecho (`storage.sql` + `lib/uploadPhoto.ts`).
 - [ ] Ajustar el centro del mapa a la zona afectada (`ReportsMap.tsx`, const `CENTER`).
 - [ ] Borrar los datos demo de `schema.sql` en producción.
 - [ ] Crear widget Turnstile en Cloudflare y cargar las 3 env en Vercel.
-- [ ] Re-ejecutar `security.sql` en DEV y PROD (cambió rate-limit + políticas insert).
+- [ ] Re-ejecutar `security.sql`/`admin.sql`/`storage.sql` en DEV y PROD.
 
 ---
 
