@@ -512,7 +512,7 @@ textarea { min-height: 100px; resize: vertical; }
   background: var(--borde);
   border-radius: var(--r) var(--r) 0 0; overflow: hidden;
 }
-.pmodal-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pmodal-foto img { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: auto; height: 100%; max-width: none; display: block; }
 .pmodal-foto-vacia {
   width: 100%; height: 100%;
   display: grid; place-content: center; gap: .2rem;
