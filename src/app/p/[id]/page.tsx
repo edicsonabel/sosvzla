@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { dict, type Lang } from '@/lib/dict';
 import type { Person } from '@/lib/supabase';
+import ShareButtons from './ShareButtons';
 
 // Página pública por persona desaparecida. Pensada para difundir: el enlace
 // genera vista previa (foto + nombre + estado) al pegarlo en WhatsApp/redes,
@@ -133,6 +134,11 @@ export default async function PersonPage({
           </div>
 
           {p.description && <p className="pp-desc">{p.description}</p>}
+
+          <ShareButtons
+            url={`https://sosvzla.com/p/${p.id}`}
+            text={`${p.name}${p.last_seen ? ` — ${p.last_seen}` : ''} · SOS Venezuela`}
+          />
 
           <Link href="/buscar" className="btn">{tr('pp.cta')}</Link>
         </div>
