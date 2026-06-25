@@ -699,6 +699,8 @@ textarea { min-height: 100px; resize: vertical; }
 .lang-toggle:hover { border-color: var(--acento); color: var(--acento); }
 .theme-toggle { font-size: 1rem; line-height: 1; padding: 0.25rem 0.45rem; border: 1px solid var(--borde); border-radius: var(--r-sm); background: transparent; cursor: pointer; }
 .theme-toggle:hover { border-color: var(--acento); }
+.github-link { display: inline-flex; align-items: center; padding: 0.25rem 0.4rem; border: 1px solid var(--borde); border-radius: var(--r-sm); color: var(--texto-sec); }
+.github-link:hover { border-color: var(--acento); color: var(--acento); }
 
 /* Reveal escalonado en carga */
 .reveal { animation: subir .5s cubic-bezier(.2,.7,.2,1) both; }
