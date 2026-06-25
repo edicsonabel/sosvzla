@@ -7,6 +7,7 @@ import { uploadPhoto } from '@/lib/uploadPhoto';
 import { hashEditorDoc } from '@/lib/editorDoc';
 import Turnstile, { turnstileEnabled } from '@/lib/Turnstile';
 import EditPersonForm from './EditPersonForm';
+import { useT } from '@/lib/i18n';
 
 const BADGE: Record<string, string> = {
   missing: 'badge-missing',
@@ -14,13 +15,8 @@ const BADGE: Record<string, string> = {
   found: 'badge-found',
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  missing: 'desaparecido',
-  safe: 'seguro',
-  found: 'encontrado',
-};
-
 export default function Search() {
+  const { t } = useT();
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Person[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -62,7 +58,7 @@ export default function Search() {
 
     const online = typeof navigator === 'undefined' || navigator.onLine;
     if (turnstileEnabled() && online && !token) {
-      setPhotoError('Completa la verificación anti-spam para enviar.');
+      setPhotoError(t('search.err.captcha'));
       return;
     }
 
@@ -112,19 +108,19 @@ export default function Search() {
 
   return (
     <>
-      <span className="kicker">● Personas</span>
-      <h1>Buscar personas</h1>
-      <p className="lead">Busca por nombre o reporta a alguien desaparecido.</p>
+      <span className="kicker">{t('search.kicker')}</span>
+      <h1>{t('search.title')}</h1>
+      <p className="lead">{t('search.lead')}</p>
 
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Nombre o cédula…"
+          placeholder={t('search.input.ph')}
           onKeyDown={(e) => e.key === 'Enter' && search()}
           style={{ flex: 1 }}
         />
-        <button className="btn" onClick={search}>Buscar</button>
+        <button className="btn" onClick={search}>{t('search.btn')}</button>
       </div>
 
       <button
@@ -132,37 +128,37 @@ export default function Search() {
         style={{ marginTop: '0.75rem' }}
         onClick={() => setShowForm((v) => !v)}
       >
-        {showForm ? 'Cerrar' : '➕ Reportar desaparecido'}
+        {showForm ? t('search.report.close') : t('search.report.open')}
       </button>
 
       {showForm && (
         <form onSubmit={report}>
           <label>
-            Nombre completo
+            {t('search.field.name')}
             <input value={name} onChange={(e) => setName(e.target.value)} required />
           </label>
           <label>
-            Cédula / DNI (opcional)
-            <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder="V-12345678" />
+            {t('search.field.doc')}
+            <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder={t('search.field.doc.ph')} />
           </label>
           <label>
-            Última ubicación conocida
+            {t('search.field.lastSeen')}
             <input value={lastSeen} onChange={(e) => setLastSeen(e.target.value)} />
           </label>
           <label>
-            Señas (edad, ropa, etc.)
+            {t('search.field.desc')}
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
           </label>
           <label>
-            Tu contacto
+            {t('search.field.contact')}
             <input value={contact} onChange={(e) => setContact(e.target.value)} />
           </label>
           <label>
-            Tu cédula de reportante (opcional) — necesaria para editar luego
-            <input value={editorDoc} onChange={(e) => setEditorDoc(e.target.value)} placeholder="Tu cédula, p. ej. V-12345678" />
+            {t('search.field.editorDoc')}
+            <input value={editorDoc} onChange={(e) => setEditorDoc(e.target.value)} placeholder={t('search.field.editorDoc.ph')} />
           </label>
           <label>
-            Foto (opcional) — ayuda a identificar
+            {t('search.field.photo')}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -175,24 +171,24 @@ export default function Search() {
           {photo && (
             <img
               src={URL.createObjectURL(photo)}
-              alt="Vista previa"
+              alt={t('search.photo.preview')}
               style={{ maxWidth: 140, borderRadius: 'var(--r-sm)', border: '1px solid var(--borde)' }}
             />
           )}
           {photoError && <div className="aviso aviso-err" role="alert">{photoError}</div>}
           <Turnstile onToken={setToken} />
           <button className="btn" type="submit" disabled={uploading}>
-            {uploading ? 'Subiendo foto…' : 'Reportar'}
+            {uploading ? t('search.uploading') : t('search.submit')}
           </button>
-          {submitted === 'ok' && <div className="aviso aviso-ok">✅ Reporte registrado.</div>}
+          {submitted === 'ok' && <div className="aviso aviso-ok">{t('search.ok')}</div>}
           {submitted === 'queued' && (
-            <div className="aviso aviso-cola">⏳ Sin conexión: se enviará al volver la red.</div>
+            <div className="aviso aviso-cola">{t('search.queued')}</div>
           )}
         </form>
       )}
 
       <div className="lista">
-        {results.length === 0 && <p>Sin resultados.</p>}
+        {results.length === 0 && <p>{t('search.noResults')}</p>}
         {results.map((p) => (
           <div className="item" key={p.id}>
             <div style={{ display: 'flex', gap: '0.85rem' }}>
@@ -206,7 +202,7 @@ export default function Search() {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                   <strong>{p.name}</strong>
-                  <span className={`badge ${BADGE[p.status]}`}>{STATUS_LABEL[p.status] ?? p.status}</span>
+                  <span className={`badge ${BADGE[p.status]}`}>{t(`person.status.${p.status}`)}</span>
                 </div>
                 {p.document_id && <div style={{ color: 'var(--texto-sec)' }}>🪪 {p.document_id}</div>}
                 {p.last_seen && <div>📍 {p.last_seen}</div>}
@@ -217,7 +213,7 @@ export default function Search() {
                     style={{ marginTop: '0.5rem' }}
                     onClick={() => setEditingId(p.id)}
                   >
-                    ✏️ Editar
+                    {t('search.edit')}
                   </button>
                 )}
               </div>

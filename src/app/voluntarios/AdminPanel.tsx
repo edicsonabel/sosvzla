@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useT } from '@/lib/i18n';
 
 interface PendingUser {
   id: string;
@@ -17,6 +18,7 @@ interface VolunteerRow {
 }
 
 export default function AdminPanel() {
+  const { t } = useT();
   const [pending, setPending] = useState<PendingUser[]>([]);
   const [team, setTeam] = useState<VolunteerRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,26 +56,28 @@ export default function AdminPanel() {
     <section style={{ marginTop: '1.5rem' }}>
       {/* Pendientes */}
       <h3 style={{ marginTop: '0.5rem' }}>
-        Solicitudes pendientes {pending.length > 0 && `(${pending.length})`}
+        {pending.length > 0
+          ? t('apanel.pending.count', { n: pending.length })
+          : t('apanel.pending')}
       </h3>
-      {loading && <p>Cargando…</p>}
+      {loading && <p>{t('apanel.loading')}</p>}
       {!loading && pending.length === 0 && (
-        <p style={{ color: 'var(--texto-sec)' }}>No hay solicitudes pendientes.</p>
+        <p style={{ color: 'var(--texto-sec)' }}>{t('apanel.pending.empty')}</p>
       )}
       <div className="lista">
         {pending.map((u) => (
           <div className="item" key={u.id}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <div>
-                <strong>{u.full_name ?? 'Sin nombre'}</strong>
+                <strong>{u.full_name ?? t('apanel.noName')}</strong>
                 <div style={{ color: 'var(--texto-sec)', fontSize: '0.85rem' }}>{u.email}</div>
               </div>
               <div className="acciones" style={{ marginTop: 0, borderTop: 'none', paddingTop: 0 }}>
                 <button className="chip" disabled={busy === u.id} onClick={() => approve(u.id, 'volunteer')}>
-                  ✓ Aprobar
+                  {t('apanel.approve')}
                 </button>
                 <button className="chip" disabled={busy === u.id} onClick={() => approve(u.id, 'admin')}>
-                  ★ Hacer admin
+                  {t('apanel.makeAdmin')}
                 </button>
               </div>
             </div>
@@ -82,18 +86,18 @@ export default function AdminPanel() {
       </div>
 
       {/* Equipo actual */}
-      <h3 style={{ marginTop: '1.75rem' }}>Voluntarios activos ({team.length})</h3>
+      <h3 style={{ marginTop: '1.75rem' }}>{t('apanel.team', { n: team.length })}</h3>
       <div className="lista">
         {team.map((v) => (
           <div className="item" key={v.user_id}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <div>
-                <strong>{v.name ?? 'Sin nombre'}</strong>{' '}
-                {v.role === 'admin' && <span className="badge badge-found">admin</span>}
+                <strong>{v.name ?? t('apanel.noName')}</strong>{' '}
+                {v.role === 'admin' && <span className="badge badge-found">{t('apanel.badge.admin')}</span>}
               </div>
               <div className="acciones" style={{ marginTop: 0, borderTop: 'none', paddingTop: 0 }}>
                 <button className="chip chip-peligro" disabled={busy === v.user_id} onClick={() => remove(v.user_id)}>
-                  Quitar
+                  {t('apanel.remove')}
                 </button>
               </div>
             </div>

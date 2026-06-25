@@ -1,46 +1,51 @@
+'use client';
+
 import Link from 'next/link';
+import { useT } from '@/lib/i18n';
 
 export default function Home() {
+  const { t } = useT();
   return (
     <>
       <div className="reveal">
-        <span className="kicker">● Respuesta de emergencia</span>
+        <span className="kicker">{t('home.kicker')}</span>
       </div>
-      <h1 className="reveal">
-        Cuando cada minuto cuenta,<br />
-        la ayuda llega más rápido.
-      </h1>
+      <h1 className="reveal" style={{ whiteSpace: 'pre-line' }}>{t('home.title')}</h1>
       <p className="lead reveal">
-        Reporta una emergencia con tu ubicación, encuentra a tus seres queridos
-        y coordina el rescate. Funciona aunque la señal sea débil.
+        {t('home.lead')}
       </p>
 
       <div className="reveal" style={{ marginTop: '1.25rem' }}>
         <Link href="/sos" className="btn btn-sos">
-          🆘 Pedir ayuda ahora
+          {t('home.cta')}
         </Link>
       </div>
 
       <div className="grid-acciones">
         <Link href="/mapa" className="card reveal">
           <div className="emoji">🗺️</div>
-          <h3>Mapa de SOS</h3>
-          <p>Voluntarios y rescatistas ven dónde se necesita ayuda, en vivo.</p>
+          <h3>{t('home.card.map.title')}</h3>
+          <p>{t('home.card.map.desc')}</p>
         </Link>
         <Link href="/buscar" className="card reveal">
           <div className="emoji">🔎</div>
-          <h3>Buscar personas</h3>
-          <p>Busca o reporta a alguien desaparecido tras el sismo.</p>
+          <h3>{t('home.card.search.title')}</h3>
+          <p>{t('home.card.search.desc')}</p>
         </Link>
         <Link href="/estoy-bien" className="card reveal">
           <div className="emoji">✅</div>
-          <h3>Estoy bien</h3>
-          <p>Avisa a tu familia que estás a salvo en segundos.</p>
+          <h3>{t('home.card.safe.title')}</h3>
+          <p>{t('home.card.safe.desc')}</p>
         </Link>
         <Link href="/sos" className="card reveal">
           <div className="emoji">📍</div>
-          <h3>Reportar SOS</h3>
-          <p>Médico, rescate, atrapado, agua o comida.</p>
+          <h3>{t('home.card.sos.title')}</h3>
+          <p>{t('home.card.sos.desc')}</p>
+        </Link>
+        <Link href="/emergencias" className="card reveal">
+          <div className="emoji">📞</div>
+          <h3>{t('home.card.phones.title')}</h3>
+          <p>{t('home.card.phones.desc')}</p>
         </Link>
       </div>
     </>

@@ -111,9 +111,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { error } = await admin.from(table).insert(clean);
+  const { data, error } = await admin.from(table).insert(clean).select('id').single();
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, id: data?.id ?? null });
 }

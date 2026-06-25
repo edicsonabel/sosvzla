@@ -5,8 +5,10 @@ import { submitOrQueue } from '@/lib/offlineQueue';
 import { uploadPhoto } from '@/lib/uploadPhoto';
 import { hashEditorDoc } from '@/lib/editorDoc';
 import Turnstile, { turnstileEnabled } from '@/lib/Turnstile';
+import { useT } from '@/lib/i18n';
 
 export default function ImSafe() {
+  const { t } = useT();
   const [name, setName] = useState('');
   const [documentId, setDocumentId] = useState('');
   const [lastSeen, setLastSeen] = useState('');
@@ -23,7 +25,7 @@ export default function ImSafe() {
 
     const online = typeof navigator === 'undefined' || navigator.onLine;
     if (turnstileEnabled() && online && !token) {
-      setPhotoError('Completa la verificación anti-spam para enviar.');
+      setPhotoError(t('safe.err.captcha'));
       return;
     }
 
@@ -50,7 +52,7 @@ export default function ImSafe() {
       last_seen: lastSeen || null,
       contact: contact || null,
       photo_url: photoUrl,
-      reported_by: 'la propia persona',
+      reported_by: t('safe.reportedBy'),
       editor_doc_hash: editorHash,
     }, token ?? undefined);
     setToken(null);
@@ -70,29 +72,29 @@ export default function ImSafe() {
 
   return (
     <>
-      <span className="kicker">● A salvo</span>
-      <h1>Estoy bien</h1>
-      <p className="lead">Avisa que estás a salvo. Aparecerás como “seguro” cuando alguien te busque.</p>
+      <span className="kicker">{t('safe.kicker')}</span>
+      <h1>{t('safe.title')}</h1>
+      <p className="lead">{t('safe.lead')}</p>
 
       <form onSubmit={submit}>
         <label>
-          Tu nombre completo
+          {t('safe.field.name')}
           <input value={name} onChange={(e) => setName(e.target.value)} required />
         </label>
         <label>
-          Cédula / DNI (opcional) — te servirá para editar luego
-          <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder="V-12345678" />
+          {t('safe.field.doc')}
+          <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder={t('safe.field.doc.ph')} />
         </label>
         <label>
-          ¿Dónde estás? (refugio, zona)
+          {t('safe.field.where')}
           <input value={lastSeen} onChange={(e) => setLastSeen(e.target.value)} />
         </label>
         <label>
-          Contacto (opcional)
+          {t('safe.field.contact')}
           <input value={contact} onChange={(e) => setContact(e.target.value)} />
         </label>
         <label>
-          Foto (opcional) — ayuda a que te reconozcan
+          {t('safe.field.photo')}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -105,17 +107,17 @@ export default function ImSafe() {
         {photo && (
           <img
             src={URL.createObjectURL(photo)}
-            alt="Vista previa"
+            alt={t('search.photo.preview')}
             style={{ maxWidth: 140, borderRadius: 'var(--r-sm)', border: '1px solid var(--borde)' }}
           />
         )}
         {photoError && <div className="aviso aviso-err" role="alert">{photoError}</div>}
         <Turnstile onToken={setToken} />
         <button className="btn" type="submit" disabled={uploading}>
-          {uploading ? 'Subiendo foto…' : 'Avisar que estoy bien'}
+          {uploading ? t('safe.uploading') : t('safe.submit')}
         </button>
-        {submitted === 'ok' && <div className="aviso aviso-ok">✅ Registrado. Tus seres queridos podrán encontrarte.</div>}
-        {submitted === 'queued' && <div className="aviso aviso-cola">⏳ Sin conexión: se enviará al volver la red.</div>}
+        {submitted === 'ok' && <div className="aviso aviso-ok">{t('safe.ok')}</div>}
+        {submitted === 'queued' && <div className="aviso aviso-cola">{t('safe.queued')}</div>}
       </form>
     </>
   );

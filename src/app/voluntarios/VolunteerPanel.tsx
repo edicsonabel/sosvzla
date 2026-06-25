@@ -3,31 +3,34 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase, type Report, type ReportStatus } from '@/lib/supabase';
+import { useT } from '@/lib/i18n';
+import type { DictKey } from '@/lib/dict';
 
-const TYPE_LABEL: Record<string, string> = {
-  medical: '🩺 Médico',
-  rescue: '🚒 Rescate',
-  trapped: '🏚️ Atrapado',
-  water_food: '💧 Agua/comida',
-  other: '❓ Otro',
+const TYPE_LABEL: Record<string, DictKey> = {
+  medical: 'type.medical.short',
+  rescue: 'type.rescue.short',
+  trapped: 'type.trapped.short',
+  water_food: 'type.water_food.short',
+  other: 'type.other.short',
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'pendiente',
-  dispatched: 'en camino',
-  resolved: 'resuelto',
-  false_report: 'falso',
+const STATUS_LABEL: Record<string, DictKey> = {
+  pending: 'status.pending',
+  dispatched: 'status.dispatched',
+  resolved: 'status.resolved',
+  false_report: 'vpanel.filter.false_report',
 };
 
-const FILTERS: { value: ReportStatus | 'active'; label: string }[] = [
-  { value: 'active', label: 'Activos' },
-  { value: 'pending', label: 'Pendientes' },
-  { value: 'dispatched', label: 'En camino' },
-  { value: 'resolved', label: 'Resueltos' },
-  { value: 'false_report', label: 'Falsos' },
+const FILTERS: { value: ReportStatus | 'active'; label: DictKey }[] = [
+  { value: 'active', label: 'vpanel.filter.active' },
+  { value: 'pending', label: 'vpanel.filter.pending' },
+  { value: 'dispatched', label: 'vpanel.filter.dispatched' },
+  { value: 'resolved', label: 'vpanel.filter.resolved' },
+  { value: 'false_report', label: 'vpanel.filter.false_report' },
 ];
 
 export default function VolunteerPanel({ email, isAdmin }: { email: string; isAdmin: boolean }) {
+  const { t } = useT();
   const [items, setItems] = useState<Report[]>([]);
   const [filter, setFilter] = useState<ReportStatus | 'active'>('active');
   const [loading, setLoading] = useState(true);
@@ -71,22 +74,25 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div>
-          <span className="kicker">● Coordinación</span>
-          <h1>Panel de voluntarios</h1>
+          <span className="kicker">{t('vpanel.kicker')}</span>
+          <h1>{t('vpanel.title')}</h1>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {isAdmin && (
-            <Link href="/admin" className="btn btn-sec">★ Gestión de voluntarios</Link>
+            <Link href="/admin" className="btn btn-sec">{t('vpanel.admin')}</Link>
           )}
           <button className="btn btn-sec" onClick={() => supabase.auth.signOut()}>
-            Salir ({email})
+            {t('vpanel.signout', { email })}
           </button>
         </div>
       </div>
 
       <p className="lead">
-        {countBy('pending')} pendientes · {countBy('dispatched')} en camino ·{' '}
-        {countBy('resolved')} resueltos
+        {t('vpanel.summary', {
+          pending: countBy('pending'),
+          dispatched: countBy('dispatched'),
+          resolved: countBy('resolved'),
+        })}
       </p>
 
       <div className="filtros">
@@ -96,20 +102,20 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
             className={`chip ${filter === f.value ? 'chip-on' : ''}`}
             onClick={() => setFilter(f.value)}
           >
-            {f.label}
+            {t(f.label)}
           </button>
         ))}
       </div>
 
-      {loading && <p>Cargando reportes…</p>}
+      {loading && <p>{t('vpanel.loading')}</p>}
 
       <div className="lista">
-        {!loading && visible.length === 0 && <p>No hay reportes en esta vista.</p>}
+        {!loading && visible.length === 0 && <p>{t('vpanel.empty')}</p>}
         {visible.map((r) => (
           <div className="item" key={r.id}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <strong>{TYPE_LABEL[r.type] ?? r.type}</strong>
-              <span className={`badge badge-${r.status}`}>{STATUS_LABEL[r.status] ?? r.status}</span>
+              <strong>{TYPE_LABEL[r.type] ? t(TYPE_LABEL[r.type]) : r.type}</strong>
+              <span className={`badge badge-${r.status}`}>{STATUS_LABEL[r.status] ? t(STATUS_LABEL[r.status]) : r.status}</span>
             </div>
             {r.description && <div style={{ marginTop: '0.3rem' }}>{r.description}</div>}
             <div style={{ color: 'var(--texto-sec)', fontSize: '0.85rem', marginTop: '0.4rem', fontFamily: 'var(--mono)' }}>
@@ -122,11 +128,11 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
                     target="_blank"
                     rel="noreferrer"
                   >
-                    ver mapa
+                    {t('vpanel.viewMap')}
                   </a>
                 </>
               ) : (
-                <>📍 Sin GPS — ver referencia en la descripción</>
+                <>{t('vpanel.noGps')}</>
               )}
             </div>
             {r.contact && <div style={{ marginTop: '0.3rem' }}>📞 {r.contact}</div>}
@@ -134,22 +140,22 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
             <div className="acciones">
               {r.status !== 'dispatched' && r.status !== 'resolved' && (
                 <button className="chip" onClick={() => changeStatus(r.id, 'dispatched')}>
-                  → En camino
+                  {t('vpanel.action.dispatch')}
                 </button>
               )}
               {r.status !== 'resolved' && (
                 <button className="chip" onClick={() => changeStatus(r.id, 'resolved')}>
-                  ✓ Resuelto
+                  {t('vpanel.action.resolve')}
                 </button>
               )}
               {r.status !== 'pending' && (
                 <button className="chip" onClick={() => changeStatus(r.id, 'pending')}>
-                  ↺ Reabrir
+                  {t('vpanel.action.reopen')}
                 </button>
               )}
               {r.status !== 'false_report' && (
                 <button className="chip chip-peligro" onClick={() => changeStatus(r.id, 'false_report')}>
-                  ⚑ Falso
+                  {t('vpanel.action.false')}
                 </button>
               )}
             </div>

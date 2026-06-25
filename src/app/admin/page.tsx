@@ -3,17 +3,19 @@
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/useSession';
+import { useT } from '@/lib/i18n';
 import AdminPanel from '../voluntarios/AdminPanel';
 
 export default function Admin() {
+  const { t } = useT();
   const { loading, session, isAdmin } = useSession();
 
   if (loading) {
     return (
       <>
-        <span className="kicker">● Administración</span>
-        <h1>Gestión de voluntarios</h1>
-        <p className="lead">Cargando…</p>
+        <span className="kicker">{t('admin.kicker')}</span>
+        <h1>{t('admin.title')}</h1>
+        <p className="lead">{t('admin.loading')}</p>
       </>
     );
   }
@@ -22,10 +24,10 @@ export default function Admin() {
   if (!session) {
     return (
       <>
-        <span className="kicker">● Administración</span>
-        <h1>Acceso restringido</h1>
-        <p className="lead">Inicia sesión desde el panel de voluntarios.</p>
-        <Link href="/voluntarios" className="btn">Ir a voluntarios</Link>
+        <span className="kicker">{t('admin.kicker')}</span>
+        <h1>{t('admin.norole.title')}</h1>
+        <p className="lead">{t('admin.norole.lead')}</p>
+        <Link href="/voluntarios" className="btn">{t('admin.goVol')}</Link>
       </>
     );
   }
@@ -34,14 +36,11 @@ export default function Admin() {
   if (!isAdmin) {
     return (
       <>
-        <span className="kicker">● Administración</span>
-        <h1>Sin permiso</h1>
-        <p className="lead">
-          Tu cuenta ({session.user.email}) no es administradora. Esta sección es
-          solo para coordinadores.
-        </p>
+        <span className="kicker">{t('admin.kicker')}</span>
+        <h1>{t('admin.noperm.title')}</h1>
+        <p className="lead">{t('admin.noperm.lead', { email: session.user.email ?? '' })}</p>
         <button className="btn btn-sec" onClick={() => supabase.auth.signOut()}>
-          Cerrar sesión
+          {t('vol.signout')}
         </button>
       </>
     );
@@ -52,12 +51,12 @@ export default function Admin() {
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div>
-          <span className="kicker">● Administración</span>
-          <h1>Gestión de voluntarios</h1>
+          <span className="kicker">{t('admin.kicker')}</span>
+          <h1>{t('admin.title')}</h1>
         </div>
-        <Link href="/voluntarios" className="btn btn-sec">← Panel de reportes</Link>
+        <Link href="/voluntarios" className="btn btn-sec">{t('admin.backReports')}</Link>
       </div>
-      <p className="lead">Aprueba solicitudes y administra el equipo de voluntarios.</p>
+      <p className="lead">{t('admin.lead')}</p>
       <AdminPanel />
     </>
   );

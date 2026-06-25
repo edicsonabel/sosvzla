@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useEffect, useMemo, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { supabase, type Report } from '@/lib/supabase';
+import { supabase, type Report, type ReportType } from '@/lib/supabase';
+import { useT } from '@/lib/i18n';
 
 const markerIcon = (color: string, pulse: boolean) =>
   L.divIcon({
@@ -24,40 +25,51 @@ const STATUS_COLOR: Record<string, string> = {
   resolved: '#16a34a',   // verde: atendido
 };
 
-const TYPE_LABEL: Record<string, string> = {
-  medical: '🩺 Médico',
-  rescue: '🚒 Rescate',
-  trapped: '🏚️ Atrapado',
-  water_food: '💧 Agua/comida',
-  other: '❓ Otro',
-};
+// Centro de respaldo (Caracas) SOLO si no hay ningún reporte con coordenadas.
+const FALLBACK_CENTER: [number, number] = [10.4806, -66.9036];
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'pendiente',
-  dispatched: 'en camino',
-  resolved: 'resuelto',
-};
+type Coord = Report & { lat: number; lng: number };
 
-// Centro por defecto: Caracas. Ajustar a la zona afectada.
-const CENTER: [number, number] = [10.4806, -66.9036];
+// Ajusta la vista del mapa a los reportes visibles. Sin reportes con coords,
+// queda en el centro de respaldo. Se ejecuta cuando cambian los puntos.
+function FitToReports({ points }: { points: Coord[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (points.length === 0) return;
+    if (points.length === 1) {
+      map.setView([points[0].lat, points[0].lng], 15);
+      return;
+    }
+    const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+  }, [points, map]);
+  return null;
+}
 
 export default function ReportsMap() {
+  const { t } = useT();
   const [items, setItems] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<ReportType | 'all'>('all');
 
   useEffect(() => {
     let active = true;
 
     async function load() {
       // Vista pública: sin contacto, sin reportes 'false_report'.
-      const { data } = await supabase
+      const { data, error: err } = await supabase
         .from('reports_public')
         .select('*')
         .order('created_at', { ascending: false });
-      if (active && data) {
+      if (!active) return;
+      if (err) {
+        setError(true);
+      } else if (data) {
         setItems(data as Report[]);
-        setLoading(false);
+        setError(false);
       }
+      setLoading(false);
     }
     load();
 
@@ -71,32 +83,85 @@ export default function ReportsMap() {
     };
   }, []);
 
+  // Solo reportes con coordenadas pueden ir al mapa.
+  const withCoords = useMemo(
+    () => items.filter((r): r is Coord => r.lat != null && r.lng != null),
+    [items]
+  );
+
+  // Conteo por tipo (sobre los que tienen coords, que son los del mapa).
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: withCoords.length };
+    for (const r of withCoords) c[r.type] = (c[r.type] ?? 0) + 1;
+    return c;
+  }, [withCoords]);
+
+  const visible = useMemo(
+    () => (typeFilter === 'all' ? withCoords : withCoords.filter((r) => r.type === typeFilter)),
+    [withCoords, typeFilter]
+  );
+
+  const noCoords = items.length - withCoords.length;
+
   return (
-    <div className="mapa-wrap">
-      <MapContainer center={CENTER} zoom={12} style={{ height: '100%', width: '100%' }}>
-        <TileLayer
-          attribution='&copy; OpenStreetMap'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {items
-          .filter((r): r is Report & { lat: number; lng: number } => r.lat != null && r.lng != null)
-          .map((r) => (
-          <Marker
-            key={r.id}
-            position={[r.lat, r.lng]}
-            icon={markerIcon(STATUS_COLOR[r.status] ?? '#64748b', r.status === 'pending')}
-          >
-            <Popup>
-              <strong>{TYPE_LABEL[r.type] ?? r.type}</strong>
-              <br />
-              {r.description ?? 'Sin descripción'}
-              <br />
-              <span className={`badge badge-${r.status}`}>{STATUS_LABEL[r.status] ?? r.status}</span>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-      {loading && <p style={{ padding: '1rem' }}>Cargando mapa…</p>}
-    </div>
+    <>
+      {/* Filtros por tipo, con contador. */}
+      <div className="filtros-mapa" role="group" aria-label="Filtrar por tipo de emergencia">
+        <button
+          className={`chip ${typeFilter === 'all' ? 'chip-on' : ''}`}
+          onClick={() => setTypeFilter('all')}
+        >
+          {t('map.filter.all', { n: counts.all ?? 0 })}
+        </button>
+        {(['medical', 'rescue', 'trapped', 'water_food', 'other'] as ReportType[]).map((ty) =>
+          counts[ty] ? (
+            <button
+              key={ty}
+              className={`chip ${typeFilter === ty ? 'chip-on' : ''}`}
+              onClick={() => setTypeFilter(ty)}
+            >
+              {t(`type.${ty}.short`)} ({counts[ty]})
+            </button>
+          ) : null
+        )}
+      </div>
+
+      {error && (
+        <div className="aviso aviso-err" role="alert">
+          {t('map.error')}
+        </div>
+      )}
+      {noCoords > 0 && (
+        <p style={{ color: 'var(--texto-sec)', fontSize: '0.85rem' }}>
+          {t('map.noCoords', { n: noCoords })}
+        </p>
+      )}
+
+      <div className="mapa-wrap">
+        <MapContainer center={FALLBACK_CENTER} zoom={12} style={{ height: '100%', width: '100%' }}>
+          <TileLayer
+            attribution='&copy; OpenStreetMap'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <FitToReports points={visible} />
+          {visible.map((r) => (
+            <Marker
+              key={r.id}
+              position={[r.lat, r.lng]}
+              icon={markerIcon(STATUS_COLOR[r.status] ?? '#64748b', r.status === 'pending')}
+            >
+              <Popup>
+                <strong>{t(`type.${r.type}.short`)}</strong>
+                <br />
+                {r.description ?? t('map.noDesc')}
+                <br />
+                <span className={`badge badge-${r.status}`}>{t(`status.${r.status}`)}</span>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+        {loading && <p style={{ padding: '1rem' }}>{t('map.loading')}</p>}
+      </div>
+    </>
   );
 }

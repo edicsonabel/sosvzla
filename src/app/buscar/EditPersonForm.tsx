@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { updatePersonSelf, type Person } from '@/lib/supabase';
 import { uploadPhoto } from '@/lib/uploadPhoto';
+import { useT } from '@/lib/i18n';
 
 // Edición propia sin login: el reportante reescribe campos y reenvía su
 // cédula (clave). El servidor valida el hash. La cédula del reportante NO
@@ -16,6 +17,7 @@ export default function EditPersonForm({
   onSaved: (p: Person) => void;
   onCancel: () => void;
 }) {
+  const { t } = useT();
   const [name, setName] = useState(person.name);
   const [documentId, setDocumentId] = useState(person.document_id ?? '');
   const [lastSeen, setLastSeen] = useState(person.last_seen ?? '');
@@ -30,7 +32,7 @@ export default function EditPersonForm({
     e.preventDefault();
     setError(null);
     if (!editorDoc.trim()) {
-      setError('Ingresa tu cédula (la que usaste al reportar) para editar.');
+      setError(t('editp.docRequired'));
       return;
     }
     setSaving(true);
@@ -57,7 +59,7 @@ export default function EditPersonForm({
     });
     setSaving(false);
     if (r.error || !r.person) {
-      setError('Cédula no coincide o no se pudo editar.');
+      setError(t('editp.docMismatch'));
       return;
     }
     onSaved(r.person);
@@ -66,27 +68,27 @@ export default function EditPersonForm({
   return (
     <form onSubmit={save} style={{ marginTop: '0.75rem' }}>
       <label>
-        Nombre completo
+        {t('editp.field.name')}
         <input value={name} onChange={(e) => setName(e.target.value)} required />
       </label>
       <label>
-        Cédula / DNI de la persona (opcional)
-        <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder="V-12345678" />
+        {t('editp.field.doc')}
+        <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder={t('editp.field.doc.ph')} />
       </label>
       <label>
-        Última ubicación conocida
+        {t('editp.field.lastSeen')}
         <input value={lastSeen} onChange={(e) => setLastSeen(e.target.value)} />
       </label>
       <label>
-        Señas (edad, ropa, etc.)
+        {t('editp.field.desc')}
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
       </label>
       <label>
-        Tu contacto
+        {t('editp.field.contact')}
         <input value={contact} onChange={(e) => setContact(e.target.value)} />
       </label>
       <label>
-        Foto nueva (opcional) — reemplaza la actual
+        {t('editp.field.photo')}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -94,21 +96,21 @@ export default function EditPersonForm({
         />
       </label>
       <label>
-        Tu cédula de reportante (clave para editar)
+        {t('editp.field.editorDoc')}
         <input
           value={editorDoc}
           onChange={(e) => setEditorDoc(e.target.value)}
-          placeholder="La cédula que pusiste al reportar"
+          placeholder={t('editp.field.editorDoc.ph')}
           required
         />
       </label>
       {error && <div className="aviso aviso-err">{error}</div>}
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <button className="btn" type="submit" disabled={saving}>
-          {saving ? 'Guardando…' : 'Guardar cambios'}
+          {saving ? t('editp.saving') : t('editp.save')}
         </button>
         <button className="btn btn-sec" type="button" onClick={onCancel} disabled={saving}>
-          Cancelar
+          {t('editp.cancel')}
         </button>
       </div>
     </form>

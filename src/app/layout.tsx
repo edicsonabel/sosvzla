@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import Link from 'next/link';
 import './globals.css';
 import ServiceWorker from './ServiceWorker';
+import { LanguageProvider } from '@/lib/i18n';
+import { Nav, Footer } from './Nav';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://sosvzla.com'),
@@ -36,24 +37,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body>
-        <ServiceWorker />
-        <header className="topbar">
-          <Link href="/" className="brand">
-            <span className="dot" aria-hidden="true" />
-            SOS&nbsp;Venezuela
-          </Link>
-          <nav>
-            <Link href="/sos">Reportar</Link>
-            <Link href="/mapa">Mapa</Link>
-            <Link href="/buscar">Buscar</Link>
-            <Link href="/estoy-bien">Estoy bien</Link>
-            <Link href="/voluntarios">Voluntarios</Link>
-          </nav>
-        </header>
-        <main className="container">{children}</main>
-        <footer className="footer">
-          proyecto solidario · datos abiertos · ayuda mutua
-        </footer>
+        <LanguageProvider>
+          <ServiceWorker />
+          <Nav />
+          <main className="container">{children}</main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

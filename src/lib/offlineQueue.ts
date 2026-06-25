@@ -66,7 +66,7 @@ async function postSubmit(
   table: TableName,
   payload: Record<string, unknown>,
   opts: { token?: string; replay?: boolean }
-): Promise<{ ok: true } | { ok: false; error: SubmitError }> {
+): Promise<{ ok: true; id: string | null } | { ok: false; error: SubmitError }> {
   let res: Response;
   try {
     res = await fetch(ENDPOINT, {
@@ -77,7 +77,16 @@ async function postSubmit(
   } catch {
     return { ok: false, error: { message: 'Sin conexión.', network: true } };
   }
-  if (res.ok) return { ok: true };
+  if (res.ok) {
+    let id: string | null = null;
+    try {
+      const data = (await res.json()) as { id?: string | null };
+      id = data.id ?? null;
+    } catch {
+      /* sin cuerpo */
+    }
+    return { ok: true, id };
+  }
   let message = 'No se pudo enviar.';
   try {
     const data = (await res.json()) as { error?: string };
@@ -110,13 +119,13 @@ export async function submitOrQueue(
   table: TableName,
   payload: Record<string, unknown>,
   token?: string
-): Promise<{ ok: boolean; queued: boolean; error?: string }> {
+): Promise<{ ok: boolean; queued: boolean; error?: string; id?: string | null }> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     enqueue(table, payload);
     return { ok: true, queued: true };
   }
   const res = await postSubmit(table, payload, { token });
-  if (res.ok) return { ok: true, queued: false };
+  if (res.ok) return { ok: true, queued: false, id: res.id };
 
   // Falló: si es reintentable (red/rate-limit/5xx) lo encolamos; si es
   // validación o captcha, devolvemos el error para que el formulario lo muestre.
