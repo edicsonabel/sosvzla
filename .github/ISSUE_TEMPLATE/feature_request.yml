@@ -1,0 +1,36 @@
+name: 💡 Proponer una mejora
+description: Una idea o función nueva para la plataforma
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de proponer, mira [AGENTS.md](../blob/main/AGENTS.md) para entender
+        las reglas que no se rompen y el enfoque del proyecto.
+  - type: textarea
+    id: problema
+    attributes:
+      label: ¿Qué problema resuelve?
+      description: Describe la necesidad real, no solo la solución.
+      placeholder: Los voluntarios no pueden filtrar el mapa por tipo de emergencia.
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Propuesta
+      description: ¿Qué te gustaría que hiciera?
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+      description: Otras formas de resolverlo que pensaste.
+  - type: checkboxes
+    id: reglas
+    attributes:
+      label: Confirmación
+      options:
+        - label: Esta mejora respeta las reglas que no se rompen (sin rojo, sin exponer contactos, insert anónimo sin login).
+          required: true

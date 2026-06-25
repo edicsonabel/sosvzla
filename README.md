@@ -78,6 +78,18 @@ Esto maneja datos de personas vulnerables en emergencia.
 - [ ] Borrar los datos demo de `schema.sql` en producción.
 - [ ] Crear widget Turnstile en Cloudflare y cargar las env en Vercel.
 
+## Contribuir
+
+Este es un proyecto solidario y abierto. Toda ayuda suma — código, traducción,
+accesibilidad, documentación o reportar bugs.
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — cómo contribuir, flujo de PR, convenciones.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — trato respetuoso, proyecto apolítico.
+- **[SECURITY.md](SECURITY.md)** — reportar vulnerabilidades en privado.
+- **[AGENTS.md](AGENTS.md)** — decisiones no obvias; léelo antes de tocar código.
+
+Licencia: [MIT](LICENSE).
+
 ## Referentes (no reinventar la rueda)
 
 - [Ushahidi](https://www.ushahidi.com/) — mapeo de crisis por reportes ciudadanos.
