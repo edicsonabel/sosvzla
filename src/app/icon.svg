@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b3d66"/>
+      <stop offset="1" stop-color="#15639f"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#g)"/>
+  <circle cx="96" cy="58" r="13" fill="#2dd4bf"/>
+  <text x="96" y="142" font-size="62" font-family="Archivo, system-ui, sans-serif" font-weight="900" fill="#fff" text-anchor="middle" letter-spacing="-2">SOS</text>
+</svg>
