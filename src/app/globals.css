@@ -409,9 +409,14 @@ textarea { min-height: 100px; resize: vertical; }
   background: var(--borde);
 }
 .persona-foto img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover; display: block;
+  /* Encaja por alto: imagen completa de arriba a abajo, laterales recortados.
+     Quien sube la foto no tiene que recortar nada — siempre cabe verticalmente. */
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: auto; height: 100%;
+  max-width: none;
+  display: block;
 }
 /* Sin foto: inicial grande, deja claro que falta sin dejar hueco muerto */
 .persona-foto-vacia {
