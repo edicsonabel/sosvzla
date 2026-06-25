@@ -287,13 +287,13 @@ textarea { min-height: 100px; resize: vertical; }
 }
 .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .badge-pending, .badge-missing { background: var(--acento-soft); color: var(--azul-700); }
-.badge-dispatched { background: color-mix(in srgb, var(--ambar) 18%, var(--bg-elev)); color: var(--ambar-d); }
+.badge-dispatched, .badge-found_pending { background: color-mix(in srgb, var(--ambar) 18%, var(--bg-elev)); color: var(--ambar-d); }
 .badge-resolved, .badge-safe { background: color-mix(in srgb, var(--verde) 14%, var(--bg-elev)); color: var(--verde); }
 .badge-found { background: color-mix(in srgb, var(--azul-600) 16%, var(--bg-elev)); color: var(--azul-600); }
 .badge-false_report { background: var(--borde); color: var(--texto-sec); }
 @media (prefers-color-scheme: dark) {
   .badge-pending, .badge-missing { color: var(--teal-400); }
-  .badge-dispatched { color: var(--ambar); }
+  .badge-dispatched, .badge-found_pending { color: var(--ambar); }
 }
 
 /* ---------- Mapa ---------- */

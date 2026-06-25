@@ -139,7 +139,11 @@ libre; en PROD nunca `reset.sql` con datos reales sin exportar antes.
 - `reports` — reporte de emergencia. `geo` (geography) se rellena por trigger
   desde `lat`/`lng`. `status`: `pending` → `dispatched` → `resolved` (o
   `false_report`). `type`: `medical`/`rescue`/`trapped`/`water_food`/`other`.
-- `persons` — desaparecidos / a salvo. `status`: `missing`, `safe`, `found`.
+- `persons` — desaparecidos / a salvo. `status`: `missing`, `safe`, `found`,
+  `found_pending`. El reportante (con su cédula, RPC `claim_person_found`) solo
+  puede pasar de `missing` → `found_pending` ("creo que lo encontré"). Un
+  **voluntario** confirma (`found`) o rechaza (`missing`) desde el panel. El
+  reportante NUNCA marca `found` directo.
 - `volunteers` — usuarios con permiso de moderar (ver `security.sql`).
 - **Vistas públicas:** `reports_public`, `persons_public` (sin `contact`, sin
   `false_report`). El front anónimo SIEMPRE lee de estas.

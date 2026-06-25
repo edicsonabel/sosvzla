@@ -171,6 +171,48 @@ end $$;
 grant execute on function public.update_person_self to anon, authenticated;
 
 -- ------------------------------------------------------------
+-- 3.c "CREO QUE LO ENCONTRÉ" por el reportante (sin login)
+--    El reportante reenvía su cédula y solo puede dejar el estado en
+--    'found_pending' (sugerencia). NO puede poner 'found' directo: eso lo
+--    confirma un voluntario. Solo aplica si la persona está 'missing'.
+-- ------------------------------------------------------------
+create or replace function public.claim_person_found(
+  p_id         uuid,
+  p_editor_doc text
+)
+returns public.persons_public
+language plpgsql security definer set search_path = public as $$
+declare
+  v_hash text := encode(digest(coalesce(p_editor_doc, ''), 'sha256'), 'hex');
+  v_row  public.persons;
+  v_out  public.persons_public;
+begin
+  if coalesce(p_editor_doc, '') = '' then
+    raise exception 'Cédula requerida.' using errcode = 'check_violation';
+  end if;
+
+  update public.persons p
+     set status     = 'found_pending',
+         updated_at = now()
+   where p.id = p_id
+     and p.editor_doc_hash is not null
+     and p.editor_doc_hash = v_hash
+     and p.status = 'missing'   -- solo desde 'desaparecido'
+  returning * into v_row;
+
+  if v_row.id is null then
+    raise exception 'Cédula no coincide o la persona ya no está marcada como desaparecida.'
+      using errcode = 'check_violation';
+  end if;
+
+  select id, name, document_id, status, last_seen, description, photo_url, created_at
+    into v_out
+    from public.persons where id = v_row.id;
+  return v_out;
+end $$;
+grant execute on function public.claim_person_found to anon, authenticated;
+
+-- ------------------------------------------------------------
 -- 4. RATE LIMITING POR IP (anti-spam)
 --    El insert anónimo ya NO va directo del navegador: pasa por el route
 --    handler /api/submit (Vercel), que verifica captcha Turnstile y llama a

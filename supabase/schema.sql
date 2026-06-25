@@ -62,8 +62,9 @@ create table if not exists public.persons (
   id              uuid primary key default uuid_generate_v4(),
   name            text not null,
   document_id     text,           -- cédula / DNI / pasaporte (texto libre)
+  -- found_pending: el reportante "cree que apareció"; un voluntario confirma.
   status          text not null default 'missing'
-                  check (status in ('missing','safe','found')),
+                  check (status in ('missing','safe','found','found_pending')),
   last_seen       text,           -- última ubicación conocida (texto libre)
   description     text,           -- señas, ropa, edad, etc.
   photo_url       text,
@@ -79,6 +80,10 @@ create table if not exists public.persons (
 -- Migración para BD existentes (idempotente):
 alter table public.persons add column if not exists document_id text;
 alter table public.persons add column if not exists editor_doc_hash text;
+-- Ampliar el check de status para incluir 'found_pending' en BD existentes.
+alter table public.persons drop constraint if exists persons_status_check;
+alter table public.persons add constraint persons_status_check
+  check (status in ('missing','safe','found','found_pending'));
 
 create index if not exists idx_persons_name on public.persons using gin (to_tsvector('spanish', name));
 create index if not exists idx_persons_status on public.persons (status);

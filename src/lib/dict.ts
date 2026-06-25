@@ -128,6 +128,7 @@ export const dict = {
     'person.status.missing': 'desaparecido',
     'person.status.safe': 'seguro',
     'person.status.found': 'encontrado',
+    'person.status.found_pending': 'por confirmar',
 
     // --- estoy bien ---
     'safe.kicker': '● A salvo',
@@ -217,12 +218,16 @@ export const dict = {
     'ppanel.filter.missing': 'Desaparecidos',
     'ppanel.filter.safe': 'A salvo',
     'ppanel.filter.found': 'Encontrados',
+    'ppanel.filter.found_pending': 'Por confirmar',
     'ppanel.loading': 'Cargando personas…',
     'ppanel.empty': 'No hay personas en esta vista.',
     'ppanel.reportedBy': 'Reportó: {who}',
+    'ppanel.claimNote': '🙌 El reportante cree que apareció. Confirma o rechaza.',
     'ppanel.action.missing': '🔎 Desaparecido',
     'ppanel.action.safe': '✅ A salvo',
     'ppanel.action.found': '🙌 Encontrado',
+    'ppanel.action.confirmFound': '✓ Confirmar encontrado',
+    'ppanel.action.reject': '✗ No apareció',
 
     // --- admin panel ---
     'apanel.pending': 'Solicitudes pendientes',
@@ -251,6 +256,10 @@ export const dict = {
     'editp.saving': 'Guardando…',
     'editp.save': 'Guardar cambios',
     'editp.cancel': 'Cancelar',
+    'editp.claim': '🙌 Creo que lo encontré',
+    'editp.claiming': 'Enviando…',
+    'editp.claim.ok': '✅ Avisamos que crees que apareció. Un voluntario lo confirmará.',
+    'editp.claim.hint': 'Si ya apareció, avísanos. Un voluntario lo verificará antes de marcarlo como encontrado.',
   },
 
   en: {
@@ -374,6 +383,7 @@ export const dict = {
     'person.status.missing': 'missing',
     'person.status.safe': 'safe',
     'person.status.found': 'found',
+    'person.status.found_pending': 'to confirm',
 
     // --- estoy bien ---
     'safe.kicker': '● Safe',
@@ -463,12 +473,16 @@ export const dict = {
     'ppanel.filter.missing': 'Missing',
     'ppanel.filter.safe': 'Safe',
     'ppanel.filter.found': 'Found',
+    'ppanel.filter.found_pending': 'To confirm',
     'ppanel.loading': 'Loading people…',
     'ppanel.empty': 'No people in this view.',
     'ppanel.reportedBy': 'Reported by: {who}',
+    'ppanel.claimNote': '🙌 The reporter thinks they appeared. Confirm or reject.',
     'ppanel.action.missing': '🔎 Missing',
     'ppanel.action.safe': '✅ Safe',
     'ppanel.action.found': '🙌 Found',
+    'ppanel.action.confirmFound': '✓ Confirm found',
+    'ppanel.action.reject': '✗ Not found',
 
     // --- admin panel ---
     'apanel.pending': 'Pending requests',
@@ -497,6 +511,10 @@ export const dict = {
     'editp.saving': 'Saving…',
     'editp.save': 'Save changes',
     'editp.cancel': 'Cancel',
+    'editp.claim': '🙌 I think I found them',
+    'editp.claiming': 'Sending…',
+    'editp.claim.ok': "✅ We've flagged that you think they appeared. A volunteer will confirm it.",
+    'editp.claim.hint': 'If they have appeared, let us know. A volunteer will verify before marking them as found.',
   },
 } as const;
 

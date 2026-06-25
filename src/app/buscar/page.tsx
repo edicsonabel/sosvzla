@@ -13,6 +13,7 @@ const BADGE: Record<string, string> = {
   missing: 'badge-missing',
   safe: 'badge-safe',
   found: 'badge-found',
+  found_pending: 'badge-found_pending',
 };
 
 export default function Search() {

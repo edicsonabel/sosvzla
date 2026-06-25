@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { updatePersonSelf, type Person } from '@/lib/supabase';
+import { updatePersonSelf, claimPersonFound, type Person } from '@/lib/supabase';
 import { uploadPhoto } from '@/lib/uploadPhoto';
 import { useT } from '@/lib/i18n';
 
@@ -27,6 +27,27 @@ export default function EditPersonForm({
   const [photo, setPhoto] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const [claimOk, setClaimOk] = useState(false);
+
+  // El reportante sugiere "creo que lo encontré": deja el estado en
+  // found_pending; un voluntario confirma. Reusa la cédula del formulario.
+  async function claimFound() {
+    setError(null);
+    if (!editorDoc.trim()) {
+      setError(t('editp.docRequired'));
+      return;
+    }
+    setClaiming(true);
+    const r = await claimPersonFound(person.id, editorDoc);
+    setClaiming(false);
+    if (r.error || !r.person) {
+      setError(t('editp.docMismatch'));
+      return;
+    }
+    setClaimOk(true);
+    onSaved(r.person);
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -105,14 +126,27 @@ export default function EditPersonForm({
         />
       </label>
       {error && <div className="aviso aviso-err">{error}</div>}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <button className="btn" type="submit" disabled={saving}>
+      {claimOk && <div className="aviso aviso-ok">{t('editp.claim.ok')}</div>}
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <button className="btn" type="submit" disabled={saving || claiming}>
           {saving ? t('editp.saving') : t('editp.save')}
         </button>
-        <button className="btn btn-sec" type="button" onClick={onCancel} disabled={saving}>
+        <button className="btn btn-sec" type="button" onClick={onCancel} disabled={saving || claiming}>
           {t('editp.cancel')}
         </button>
       </div>
+
+      {/* "Creo que lo encontré": solo si sigue desaparecido. Requiere la cédula. */}
+      {person.status === 'missing' && (
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--borde)' }}>
+          <p style={{ color: 'var(--texto-sec)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+            {t('editp.claim.hint')}
+          </p>
+          <button className="btn btn-sec" type="button" onClick={claimFound} disabled={saving || claiming}>
+            {claiming ? t('editp.claiming') : t('editp.claim')}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

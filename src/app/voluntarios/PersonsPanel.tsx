@@ -9,11 +9,13 @@ const STATUS_LABEL: Record<string, DictKey> = {
   missing: 'person.status.missing',
   safe: 'person.status.safe',
   found: 'person.status.found',
+  found_pending: 'person.status.found_pending',
 };
 
 const FILTERS: { value: PersonStatus | 'all'; label: DictKey }[] = [
   { value: 'all', label: 'ppanel.filter.all' },
   { value: 'missing', label: 'ppanel.filter.missing' },
+  { value: 'found_pending', label: 'ppanel.filter.found_pending' },
   { value: 'safe', label: 'ppanel.filter.safe' },
   { value: 'found', label: 'ppanel.filter.found' },
 ];
@@ -109,21 +111,41 @@ export default function PersonsPanel() {
                   </div>
                 )}
 
+                {/* Sugerencia del reportante pendiente de confirmar. */}
+                {p.status === 'found_pending' && (
+                  <div className="aviso aviso-cola" style={{ marginTop: '0.5rem' }}>
+                    {t('ppanel.claimNote')}
+                  </div>
+                )}
+
                 <div className="acciones">
-                  {p.status !== 'missing' && (
-                    <button className="chip" onClick={() => changeStatus(p.id, 'missing')}>
-                      {t('ppanel.action.missing')}
-                    </button>
-                  )}
-                  {p.status !== 'safe' && (
-                    <button className="chip" onClick={() => changeStatus(p.id, 'safe')}>
-                      {t('ppanel.action.safe')}
-                    </button>
-                  )}
-                  {p.status !== 'found' && (
-                    <button className="chip" onClick={() => changeStatus(p.id, 'found')}>
-                      {t('ppanel.action.found')}
-                    </button>
+                  {p.status === 'found_pending' ? (
+                    <>
+                      <button className="chip" onClick={() => changeStatus(p.id, 'found')}>
+                        {t('ppanel.action.confirmFound')}
+                      </button>
+                      <button className="chip chip-peligro" onClick={() => changeStatus(p.id, 'missing')}>
+                        {t('ppanel.action.reject')}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {p.status !== 'missing' && (
+                        <button className="chip" onClick={() => changeStatus(p.id, 'missing')}>
+                          {t('ppanel.action.missing')}
+                        </button>
+                      )}
+                      {p.status !== 'safe' && (
+                        <button className="chip" onClick={() => changeStatus(p.id, 'safe')}>
+                          {t('ppanel.action.safe')}
+                        </button>
+                      )}
+                      {p.status !== 'found' && (
+                        <button className="chip" onClick={() => changeStatus(p.id, 'found')}>
+                          {t('ppanel.action.found')}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

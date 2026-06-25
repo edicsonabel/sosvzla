@@ -25,7 +25,8 @@ export interface Report {
   created_at: string;
 }
 
-export type PersonStatus = 'missing' | 'safe' | 'found';
+// found_pending: el reportante sugiere "creo que apareció"; un voluntario confirma.
+export type PersonStatus = 'missing' | 'safe' | 'found' | 'found_pending';
 
 export interface Person {
   id: string;
@@ -66,6 +67,22 @@ export async function updatePersonSelf(
     p_description: fields.description,
     p_contact: fields.contact,
     p_photo_url: fields.photo_url,
+  });
+  if (error) {
+    return { person: null, error: error.message };
+  }
+  return { person: data as Person, error: null };
+}
+
+// El reportante sugiere "creo que lo encontré" -> deja el estado en
+// 'found_pending'. Un voluntario lo confirma luego. Valida con la cédula.
+export async function claimPersonFound(
+  id: string,
+  editorDoc: string
+): Promise<{ person: Person | null; error: string | null }> {
+  const { data, error } = await supabase.rpc('claim_person_found', {
+    p_id: id,
+    p_editor_doc: editorDoc,
   });
   if (error) {
     return { person: null, error: error.message };
