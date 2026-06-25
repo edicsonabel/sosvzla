@@ -407,6 +407,17 @@ textarea { min-height: 100px; resize: vertical; }
   width: 100%;
   aspect-ratio: 4 / 3;
   background: var(--borde);
+  overflow: hidden;
+}
+/* Relleno de laterales: la misma foto difuminada y ampliada cubre el recuadro,
+   para que una foto vertical no deje bandas muertas. Va detrás de la nítida.
+   --foto se inyecta por estilo inline con la URL de la imagen. */
+.persona-foto::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--foto) center / cover no-repeat;
+  filter: blur(18px) brightness(.7);
+  transform: scale(1.15);
 }
 .persona-foto img {
   /* Encaja por alto: imagen completa de arriba a abajo, laterales recortados.
@@ -417,6 +428,7 @@ textarea { min-height: 100px; resize: vertical; }
   width: auto; height: 100%;
   max-width: none;
   display: block;
+  z-index: 1;
 }
 /* Sin foto: inicial grande, deja claro que falta sin dejar hueco muerto */
 .persona-foto-vacia {
@@ -438,7 +450,7 @@ textarea { min-height: 100px; resize: vertical; }
 }
 /* Badge de estado flotando sobre la foto, legible sobre cualquier imagen */
 .persona-badge {
-  position: absolute; top: .6rem; right: .6rem;
+  position: absolute; top: .6rem; right: .6rem; z-index: 2;
   backdrop-filter: blur(6px) saturate(140%);
   background: color-mix(in srgb, var(--bg-elev) 78%, transparent);
   border: 1px solid var(--borde);
@@ -512,7 +524,12 @@ textarea { min-height: 100px; resize: vertical; }
   background: var(--borde);
   border-radius: var(--r) var(--r) 0 0; overflow: hidden;
 }
-.pmodal-foto img { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: auto; height: 100%; max-width: none; display: block; }
+.pmodal-foto::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--foto) center / cover no-repeat;
+  filter: blur(18px) brightness(.7); transform: scale(1.15);
+}
+.pmodal-foto img { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: auto; height: 100%; max-width: none; display: block; z-index: 1; }
 .pmodal-foto-vacia {
   width: 100%; height: 100%;
   display: grid; place-content: center; gap: .2rem;
@@ -601,9 +618,14 @@ textarea { min-height: 100px; resize: vertical; }
 }
 .pp-foto {
   position: relative; width: 100%; aspect-ratio: 4 / 3;
-  background: var(--borde);
+  background: var(--borde); overflow: hidden;
 }
-.pp-foto img { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: auto; height: 100%; max-width: none; display: block; }
+.pp-foto::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--foto) center / cover no-repeat;
+  filter: blur(18px) brightness(.7); transform: scale(1.15);
+}
+.pp-foto img { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: auto; height: 100%; max-width: none; display: block; z-index: 1; }
 .pp-foto-vacia {
   width: 100%; height: 100%;
   display: grid; place-content: center; gap: .2rem;

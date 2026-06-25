@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { supabase, type Person } from '@/lib/supabase';
 import { submitOrQueue } from '@/lib/offlineQueue';
 import { uploadPhoto } from '@/lib/uploadPhoto';
@@ -204,6 +204,7 @@ export default function Search() {
               className="persona-foto persona-foto-btn"
               onClick={() => setDetailId(p.id)}
               aria-label={p.name}
+              style={p.photo_url && !photoFail[p.id] ? ({ '--foto': `url(${p.photo_url})` } as CSSProperties) : undefined}
             >
               {p.photo_url && !photoFail[p.id] ? (
                 <img

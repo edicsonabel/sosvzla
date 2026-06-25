@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { dict, type Lang } from '@/lib/dict';
@@ -103,7 +104,10 @@ export default async function PersonPage({
       <Link href="/buscar" className="pp-back">← {tr('pp.backToSearch')}</Link>
 
       <div className="pp-card">
-        <div className="pp-foto">
+        <div
+          className="pp-foto"
+          style={p.photo_url ? ({ '--foto': `url(${p.photo_url})` } as CSSProperties) : undefined}
+        >
           {p.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={p.photo_url} alt={p.name} />

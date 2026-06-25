@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { claimPersonFound, type Person } from '@/lib/supabase';
 import { useT } from '@/lib/i18n';
 
@@ -106,7 +106,10 @@ export default function PersonModal({
           ✕
         </button>
 
-        <div className="pmodal-foto">
+        <div
+          className="pmodal-foto"
+          style={showPhoto ? ({ '--foto': `url(${person.photo_url})` } as CSSProperties) : undefined}
+        >
           {showPhoto ? (
             <img
               src={person.photo_url!}
