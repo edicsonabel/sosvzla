@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase, type Person, type PersonStatus } from '@/lib/supabase';
 import { useT } from '@/lib/i18n';
 import type { DictKey } from '@/lib/dict';
+import ConfirmDialog, { type ConfirmOptions } from '@/lib/ConfirmDialog';
 
 const STATUS_LABEL: Record<string, DictKey> = {
   missing: 'person.status.missing',
@@ -25,6 +26,12 @@ export default function PersonsPanel() {
   const [items, setItems] = useState<Person[]>([]);
   const [filter, setFilter] = useState<PersonStatus | 'all'>('missing');
   const [loading, setLoading] = useState(true);
+  const [confirm, setConfirm] = useState<ConfirmOptions | null>(null);
+
+  // Pide confirmación antes de un cambio de estado crítico.
+  function askConfirm(opts: ConfirmOptions) {
+    setConfirm(opts);
+  }
 
   async function load() {
     // Tabla cruda (con contacto): RLS solo permite a voluntarios.
@@ -121,27 +128,61 @@ export default function PersonsPanel() {
                 <div className="acciones">
                   {p.status === 'found_pending' ? (
                     <>
-                      <button className="chip" onClick={() => changeStatus(p.id, 'found')}>
+                      <button
+                        className="chip"
+                        onClick={() => askConfirm({
+                          title: 'confirm.person.found.title',
+                          message: 'confirm.person.found.msg',
+                          confirmLabel: 'confirm.person.found.ok',
+                          onConfirm: () => changeStatus(p.id, 'found'),
+                        })}
+                      >
                         {t('ppanel.action.confirmFound')}
                       </button>
-                      <button className="chip chip-peligro" onClick={() => changeStatus(p.id, 'missing')}>
+                      <button
+                        className="chip chip-peligro"
+                        onClick={() => askConfirm({
+                          title: 'confirm.person.reject.title',
+                          message: 'confirm.person.reject.msg',
+                          confirmLabel: 'confirm.person.reject.ok',
+                          danger: true,
+                          onConfirm: () => changeStatus(p.id, 'missing'),
+                        })}
+                      >
                         {t('ppanel.action.reject')}
                       </button>
                     </>
                   ) : (
                     <>
+                      {/* 'missing' (revertir) es suave: pasa directo. */}
                       {p.status !== 'missing' && (
                         <button className="chip" onClick={() => changeStatus(p.id, 'missing')}>
                           {t('ppanel.action.missing')}
                         </button>
                       )}
                       {p.status !== 'safe' && (
-                        <button className="chip" onClick={() => changeStatus(p.id, 'safe')}>
+                        <button
+                          className="chip"
+                          onClick={() => askConfirm({
+                            title: 'confirm.person.safe.title',
+                            message: 'confirm.person.safe.msg',
+                            confirmLabel: 'confirm.person.safe.ok',
+                            onConfirm: () => changeStatus(p.id, 'safe'),
+                          })}
+                        >
                           {t('ppanel.action.safe')}
                         </button>
                       )}
                       {p.status !== 'found' && (
-                        <button className="chip" onClick={() => changeStatus(p.id, 'found')}>
+                        <button
+                          className="chip"
+                          onClick={() => askConfirm({
+                            title: 'confirm.person.found.title',
+                            message: 'confirm.person.found.msg',
+                            confirmLabel: 'confirm.person.found.ok',
+                            onConfirm: () => changeStatus(p.id, 'found'),
+                          })}
+                        >
                           {t('ppanel.action.found')}
                         </button>
                       )}
@@ -153,6 +194,8 @@ export default function PersonsPanel() {
           </div>
         ))}
       </div>
+
+      <ConfirmDialog open={confirm !== null} options={confirm} onClose={() => setConfirm(null)} />
     </>
   );
 }

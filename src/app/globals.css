@@ -318,6 +318,16 @@ textarea { min-height: 100px; resize: vertical; }
 /* Compartir SOS */
 .share-sos input { font-family: var(--mono); font-size: 0.85rem; }
 
+/* Modal de confirmación */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; padding: 1rem; z-index: 100; animation: modalFade .15s ease-out; }
+.modal { background: var(--bg-elev); border: 1px solid var(--borde); border-radius: var(--r-md, 0.75rem); padding: 1.25rem 1.4rem; max-width: 26rem; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+.modal h3 { margin-bottom: 0.5rem; }
+@keyframes modalFade { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+/* Botón de acción peligrosa: naranja oscuro (regla: nunca rojo). */
+.btn-peligro { background: #c2410c; color: #fff; }
+.btn-peligro:hover { background: #9a3412; }
+@media (prefers-reduced-motion: reduce) { .modal-backdrop { animation: none; } }
+
 /* Pestañas del panel de voluntarios */
 .tabs { display: flex; gap: 0.25rem; margin: 1rem 0; border-bottom: 1px solid var(--borde); }
 .tab { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 0.6rem 1rem; font-weight: 600; color: var(--texto-sec); cursor: pointer; margin-bottom: -1px; }

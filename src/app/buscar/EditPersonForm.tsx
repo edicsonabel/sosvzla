@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { updatePersonSelf, claimPersonFound, type Person } from '@/lib/supabase';
 import { uploadPhoto } from '@/lib/uploadPhoto';
 import { useT } from '@/lib/i18n';
+import ConfirmDialog, { type ConfirmOptions } from '@/lib/ConfirmDialog';
 
 // Edición propia sin login: el reportante reescribe campos y reenvía su
 // cédula (clave). El servidor valida el hash. La cédula del reportante NO
@@ -29,6 +30,7 @@ export default function EditPersonForm({
   const [error, setError] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [claimOk, setClaimOk] = useState(false);
+  const [confirm, setConfirm] = useState<ConfirmOptions | null>(null);
 
   // El reportante sugiere "creo que lo encontré": deja el estado en
   // found_pending; un voluntario confirma. Reusa la cédula del formulario.
@@ -142,11 +144,30 @@ export default function EditPersonForm({
           <p style={{ color: 'var(--texto-sec)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
             {t('editp.claim.hint')}
           </p>
-          <button className="btn btn-sec" type="button" onClick={claimFound} disabled={saving || claiming}>
+          <button
+            className="btn btn-sec"
+            type="button"
+            disabled={saving || claiming}
+            onClick={() => {
+              // Validamos la cédula antes de abrir el modal de confirmación.
+              if (!editorDoc.trim()) {
+                setError(t('editp.docRequired'));
+                return;
+              }
+              setConfirm({
+                title: 'confirm.claim.title',
+                message: 'confirm.claim.msg',
+                confirmLabel: 'confirm.claim.ok',
+                onConfirm: claimFound,
+              });
+            }}
+          >
             {claiming ? t('editp.claiming') : t('editp.claim')}
           </button>
         </div>
       )}
+
+      <ConfirmDialog open={confirm !== null} options={confirm} onClose={() => setConfirm(null)} />
     </form>
   );
 }

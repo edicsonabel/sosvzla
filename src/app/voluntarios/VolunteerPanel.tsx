@@ -6,6 +6,7 @@ import { supabase, type Report, type ReportStatus } from '@/lib/supabase';
 import { useT } from '@/lib/i18n';
 import type { DictKey } from '@/lib/dict';
 import PersonsPanel from './PersonsPanel';
+import ConfirmDialog, { type ConfirmOptions } from '@/lib/ConfirmDialog';
 
 const TYPE_LABEL: Record<string, DictKey> = {
   medical: 'type.medical.short',
@@ -36,6 +37,7 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
   const [items, setItems] = useState<Report[]>([]);
   const [filter, setFilter] = useState<ReportStatus | 'active'>('active');
   const [loading, setLoading] = useState(true);
+  const [confirm, setConfirm] = useState<ConfirmOptions | null>(null);
 
   async function load() {
     // Tabla cruda (con contacto): RLS solo permite a voluntarios.
@@ -169,7 +171,15 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
                 </button>
               )}
               {r.status !== 'resolved' && (
-                <button className="chip" onClick={() => changeStatus(r.id, 'resolved')}>
+                <button
+                  className="chip"
+                  onClick={() => setConfirm({
+                    title: 'confirm.report.resolve.title',
+                    message: 'confirm.report.resolve.msg',
+                    confirmLabel: 'confirm.report.resolve.ok',
+                    onConfirm: () => changeStatus(r.id, 'resolved'),
+                  })}
+                >
                   {t('vpanel.action.resolve')}
                 </button>
               )}
@@ -179,7 +189,16 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
                 </button>
               )}
               {r.status !== 'false_report' && (
-                <button className="chip chip-peligro" onClick={() => changeStatus(r.id, 'false_report')}>
+                <button
+                  className="chip chip-peligro"
+                  onClick={() => setConfirm({
+                    title: 'confirm.report.false.title',
+                    message: 'confirm.report.false.msg',
+                    confirmLabel: 'confirm.report.false.ok',
+                    danger: true,
+                    onConfirm: () => changeStatus(r.id, 'false_report'),
+                  })}
+                >
                   {t('vpanel.action.false')}
                 </button>
               )}
@@ -189,6 +208,8 @@ export default function VolunteerPanel({ email, isAdmin }: { email: string; isAd
       </div>
       </>
       )}
+
+      <ConfirmDialog open={confirm !== null} options={confirm} onClose={() => setConfirm(null)} />
     </>
   );
 }
