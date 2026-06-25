@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { claimPersonFound, type Person } from '@/lib/supabase';
 import { useT } from '@/lib/i18n';
+import { track } from '@/lib/analytics';
 
 const BADGE: Record<string, string> = {
   missing: 'badge-missing',
@@ -68,6 +69,7 @@ export default function PersonModal({
       await navigator.clipboard.writeText(shareUrl());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      track('report_shared', { channel: 'copy' });
     } catch {
       /* clipboard bloqueado */
     }
@@ -87,6 +89,7 @@ export default function PersonModal({
       return;
     }
     setClaimOk(true);
+    track('person_found_claim');
     onUpdated(r.person);
   }
 
@@ -174,9 +177,9 @@ export default function PersonModal({
           <div className="pmodal-share">
             <span className="pmodal-share-label">{t('pmodal.share')}</span>
             <div className="pmodal-share-btns">
-              <a className="chip" href={`https://twitter.com/intent/tweet?text=${sText}&url=${sUrl}`} target="_blank" rel="noreferrer">𝕏</a>
-              <a className="chip" href={`https://www.facebook.com/sharer/sharer.php?u=${sUrl}`} target="_blank" rel="noreferrer">Facebook</a>
-              <a className="chip" href={`https://wa.me/?text=${sText}%20${sUrl}`} target="_blank" rel="noreferrer">WhatsApp</a>
+              <a className="chip" href={`https://twitter.com/intent/tweet?text=${sText}&url=${sUrl}`} target="_blank" rel="noreferrer" onClick={() => track('report_shared', { channel: 'twitter' })}>𝕏</a>
+              <a className="chip" href={`https://www.facebook.com/sharer/sharer.php?u=${sUrl}`} target="_blank" rel="noreferrer" onClick={() => track('report_shared', { channel: 'facebook' })}>Facebook</a>
+              <a className="chip" href={`https://wa.me/?text=${sText}%20${sUrl}`} target="_blank" rel="noreferrer" onClick={() => track('report_shared', { channel: 'whatsapp' })}>WhatsApp</a>
               <button className="chip" type="button" onClick={copyLink}>
                 {copied ? t('pmodal.share.copied') : `🔗 ${t('pmodal.share.copy')}`}
               </button>

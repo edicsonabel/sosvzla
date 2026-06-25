@@ -6,6 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase, type Report, type ReportType } from '@/lib/supabase';
 import { useT } from '@/lib/i18n';
+import { track } from '@/lib/analytics';
 
 const markerIcon = (color: string, pulse: boolean) =>
   L.divIcon({
@@ -52,6 +53,11 @@ export default function ReportsMap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [typeFilter, setTypeFilter] = useState<ReportType | 'all'>('all');
+
+  // Analítica: una sola vez al abrir el mapa (no en cada poll de 15s).
+  useEffect(() => {
+    track('map_viewed');
+  }, []);
 
   useEffect(() => {
     let active = true;

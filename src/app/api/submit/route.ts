@@ -115,5 +115,22 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Analítica privacy-first: contamos el evento sin PII. Server-side aquí
+  // porque es donde el insert realmente ocurre (incluye reenvíos offline).
+  // No bloquea ni revienta la respuesta si falla.
+  try {
+    if (table === 'reports') {
+      await admin.rpc('track_event', {
+        p_name: 'report_created',
+        p_props: { type: String(clean.type) },
+      });
+    } else {
+      await admin.rpc('track_event', { p_name: 'person_reported', p_props: {} });
+    }
+  } catch {
+    // silencio: la analítica nunca afecta el envío del reporte.
+  }
+
   return NextResponse.json({ ok: true, id: data?.id ?? null });
 }

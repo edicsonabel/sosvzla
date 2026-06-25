@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import ServiceWorker from './ServiceWorker';
 import { LanguageProvider } from '@/lib/i18n';
@@ -122,6 +124,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
           </ThemeProvider>
         </LanguageProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

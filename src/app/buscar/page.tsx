@@ -9,6 +9,7 @@ import Turnstile, { turnstileEnabled } from '@/lib/Turnstile';
 import EditPersonForm from './EditPersonForm';
 import PersonModal from './PersonModal';
 import { useT } from '@/lib/i18n';
+import { track } from '@/lib/analytics';
 
 const BADGE: Record<string, string> = {
   missing: 'badge-missing',
@@ -50,6 +51,11 @@ export default function Search() {
     }
     const { data } = await query;
     if (data) setResults(data as Person[]);
+    // Analítica: solo búsquedas reales con término (no el listado inicial).
+    // No mandamos el texto buscado (podría ser un nombre/cédula = PII).
+    if (q.trim().length >= 2) {
+      track('search_performed', { hits: data?.length ?? 0 });
+    }
   }
 
   useEffect(() => {
